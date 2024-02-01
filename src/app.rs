@@ -1,13 +1,23 @@
 use egui::ahash::HashMap;
 
 macro_rules! iframe_style {
-    ($rect:expr) => {
+    ($rect:expr, $interactable:expr, $visible:expr) => {
         format!(
-            "position: absolute; top: {}px; left: {}px; width: {}px; height: {}px; border: none; pointer-events: none;",
+            "border: none; position: absolute; top: {}px; left: {}px; width: {}px; height: {}px; {}; {}",
             $rect.min.y,
             $rect.min.x,
             $rect.width(),
-            $rect.height()
+            $rect.height(),
+            if $interactable {
+                ""
+            } else {
+                "pointer-events: none;"
+            },
+            if $visible {
+                ""
+            } else {
+                "visibility: hidden;"
+            }
         )
     };
 }
@@ -23,7 +33,14 @@ impl IframeHandles {
         Self(HashMap::default())
     }
 
-    pub fn create_or_update(&mut self, id: &str, url: &str, rect: egui::Rect) {
+    pub fn create_or_update(
+        &mut self,
+        id: &str,
+        src: &str,
+        rect: egui::Rect,
+        interactable: bool,
+        visible: bool,
+    ) {
         self.0.insert(id.to_string(), rect);
         let element = web_sys::window()
             .unwrap()
@@ -33,7 +50,7 @@ impl IframeHandles {
 
         if let Some(element) = element {
             element
-                .set_attribute("style", &iframe_style!(rect))
+                .set_attribute("style", &iframe_style!(rect, interactable, visible))
                 .unwrap();
         } else {
             let window = web_sys::window().unwrap();
@@ -41,8 +58,10 @@ impl IframeHandles {
             let body = document.body().unwrap();
             let iframe = document.create_element("iframe").unwrap();
             iframe.set_attribute("id", id).unwrap();
-            iframe.set_attribute("src", url).unwrap();
-            iframe.set_attribute("style", &iframe_style!(rect)).unwrap();
+            iframe.set_attribute("src", src).unwrap();
+            iframe
+                .set_attribute("style", &iframe_style!(rect, interactable, visible))
+                .unwrap();
             body.append_child(&iframe).unwrap();
         }
     }
@@ -58,17 +77,31 @@ impl TemplateApp {
 
 impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::Window::new("Webview").show(ctx, |ui| {
-            let container = ui
-                .centered_and_justified(|ui| {
-                    ui.label("<web-iframe-content>");
-                })
-                .response;
+        let shown_window = egui::Window::new("Webview").show(ctx, |ui| {
+            //ui.visuals().window_fill;
+            ui.centered_and_justified(|ui| {
+                ui.label("<web-iframe-content>");
+            })
+            .response
+            .rect
+        });
+
+        if let Some(shown_window) = shown_window {
             self.iframe_handles.create_or_update(
                 "web-iframe-content",
-                "https://www.example.com",
-                container.rect,
+                "https://www.example.org/",
+                shown_window.inner.unwrap_or(egui::Rect::ZERO),
+                false,
+                true,
             );
-        });
+        } else {
+            self.iframe_handles.create_or_update(
+                "web-iframe-content",
+                "https://www.example.org/",
+                egui::Rect::ZERO,
+                false,
+                false,
+            );
+        }
     }
 }
