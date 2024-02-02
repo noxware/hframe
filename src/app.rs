@@ -22,6 +22,11 @@ macro_rules! iframe_style {
     };
 }
 
+macro_rules! log {
+    ($($t:tt)*) => {
+        web_sys::console::log_1(&format!($($t)*).into());
+    }
+}
 pub struct TemplateApp {
     iframe_handles: IframeHandles,
 }
@@ -87,11 +92,13 @@ impl eframe::App for TemplateApp {
         });
 
         if let Some(shown_window) = shown_window {
+            let interactable = ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary));
+            // let focused;
             self.iframe_handles.create_or_update(
                 "web-iframe-content",
                 "https://www.example.org/",
                 shown_window.inner.unwrap_or(egui::Rect::ZERO),
-                false,
+                interactable,
                 true,
             );
         } else {
