@@ -37,13 +37,29 @@ pub struct TemplateApp {
 }
 
 struct IframeWindowState {
-    open: bool,
+    // All of these should be considered private.
     id: String,
     title: String,
     src: String,
+    // Specially the following internal ones.
+    open: bool,
     rect: egui::Rect,
     interactable: bool,
     visible: bool,
+}
+
+impl IframeWindowState {
+    fn new(id: &str, title: &str, src: &str) -> Self {
+        Self {
+            id: id.to_string(),
+            title: title.to_string(),
+            src: src.to_string(),
+            rect: egui::Rect::ZERO,
+            open: true,
+            interactable: true,
+            visible: true,
+        }
+    }
 }
 
 impl TemplateApp {
@@ -64,18 +80,11 @@ impl eframe::App for TemplateApp {
                 if ui.button("Add").clicked() {
                     self.iframe_id_counter += 1;
 
-                    self.iframes.push(IframeWindowState {
-                        open: true,
-                        id: format!("iframe-{}", self.iframe_id_counter),
-                        title: format!("Iframe {}", self.iframe_id_counter),
-                        src: self.new_iframe_src.clone(),
-                        rect: egui::Rect::from_min_size(
-                            egui::Pos2::new(100.0, 100.0),
-                            egui::Vec2::new(400.0, 300.0),
-                        ),
-                        interactable: true,
-                        visible: true,
-                    });
+                    self.iframes.push(IframeWindowState::new(
+                        &format!("iframe-{}", self.iframe_id_counter),
+                        &format!("Iframe {}", self.iframe_id_counter),
+                        &self.new_iframe_src,
+                    ));
                 }
             });
         });
@@ -87,34 +96,18 @@ impl eframe::App for TemplateApp {
 }
 
 fn sync_iframe(state: &IframeWindowState) {
-    let element = web_sys::window()
-        .unwrap()
-        .document()
-        .unwrap()
-        .get_element_by_id(&state.id);
-
-    if let Some(element) = element {
-        element
-            .set_attribute(
-                "style",
-                &iframe_style!(state.rect, state.interactable, state.visible),
-            )
-            .unwrap();
-    } else {
-        let window = web_sys::window().unwrap();
-        let document = window.document().unwrap();
+    let window = web_sys::window().unwrap();
+    let document = window.document().unwrap();
+    let element = document.get_element_by_id(&state.id).unwrap_or_else(|| {
         let body = document.body().unwrap();
         let iframe = document.create_element("iframe").unwrap();
         iframe.set_attribute("id", &state.id).unwrap();
         iframe.set_attribute("src", &state.src).unwrap();
-        iframe
-            .set_attribute(
-                "style",
-                &iframe_style!(state.rect, state.interactable, state.visible),
-            )
-            .unwrap();
         body.append_child(&iframe).unwrap();
-    }
+        iframe
+    });
+    let style = iframe_style!(state.rect, state.interactable, state.visible);
+    element.set_attribute("style", &style).unwrap();
 }
 
 fn show_iframe_window(ctx: &egui::Context, state: &mut IframeWindowState) {
