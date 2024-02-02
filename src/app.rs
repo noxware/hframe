@@ -1,5 +1,3 @@
-use egui::ahash::HashMap;
-
 const TEST_URL: &str = "https://www.example.com/";
 
 macro_rules! iframe_style {
@@ -30,62 +28,100 @@ macro_rules! log {
         web_sys::console::log_1(&format!($($t)*).into());
     }
 }
+
+#[derive(Default)]
 pub struct TemplateApp {
-    iframe_handles: IframeHandles,
+    iframe_id_counter: usize,
+    new_iframe_src: String,
+    iframes: Vec<IframeWindowState>,
 }
 
-pub struct IframeHandles(HashMap<String, egui::Rect>);
-
-impl IframeHandles {
-    pub fn new() -> Self {
-        Self(HashMap::default())
-    }
-
-    pub fn create_or_update(
-        &mut self,
-        id: &str,
-        src: &str,
-        rect: egui::Rect,
-        interactable: bool,
-        visible: bool,
-    ) {
-        self.0.insert(id.to_string(), rect);
-        let element = web_sys::window()
-            .unwrap()
-            .document()
-            .unwrap()
-            .get_element_by_id(id);
-
-        if let Some(element) = element {
-            element
-                .set_attribute("style", &iframe_style!(rect, interactable, visible))
-                .unwrap();
-        } else {
-            let window = web_sys::window().unwrap();
-            let document = window.document().unwrap();
-            let body = document.body().unwrap();
-            let iframe = document.create_element("iframe").unwrap();
-            iframe.set_attribute("id", id).unwrap();
-            iframe.set_attribute("src", src).unwrap();
-            iframe
-                .set_attribute("style", &iframe_style!(rect, interactable, visible))
-                .unwrap();
-            body.append_child(&iframe).unwrap();
-        }
-    }
+struct IframeWindowState {
+    open: bool,
+    id: String,
+    title: String,
+    src: String,
+    rect: egui::Rect,
+    interactable: bool,
+    visible: bool,
 }
 
 impl TemplateApp {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         Self {
-            iframe_handles: IframeHandles::new(),
+            new_iframe_src: TEST_URL.to_string(),
+            ..Default::default()
         }
     }
 }
 
 impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let shown_window = egui::Window::new("Webview").show(ctx, |ui| {
+        egui::Window::new("Devtools").show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.label("New iframe:");
+                ui.text_edit_singleline(&mut self.new_iframe_src);
+                if ui.button("Add").clicked() {
+                    self.iframe_id_counter += 1;
+
+                    self.iframes.push(IframeWindowState {
+                        open: true,
+                        id: format!("iframe-{}", self.iframe_id_counter),
+                        title: format!("Iframe {}", self.iframe_id_counter),
+                        src: self.new_iframe_src.clone(),
+                        rect: egui::Rect::from_min_size(
+                            egui::Pos2::new(100.0, 100.0),
+                            egui::Vec2::new(400.0, 300.0),
+                        ),
+                        interactable: true,
+                        visible: true,
+                    });
+                }
+            });
+        });
+
+        for state in &mut self.iframes {
+            show_iframe_window(ctx, state);
+        }
+    }
+}
+
+fn sync_iframe(state: &IframeWindowState) {
+    let element = web_sys::window()
+        .unwrap()
+        .document()
+        .unwrap()
+        .get_element_by_id(&state.id);
+
+    if let Some(element) = element {
+        element
+            .set_attribute(
+                "style",
+                &iframe_style!(state.rect, state.interactable, state.visible),
+            )
+            .unwrap();
+    } else {
+        let window = web_sys::window().unwrap();
+        let document = window.document().unwrap();
+        let body = document.body().unwrap();
+        let iframe = document.create_element("iframe").unwrap();
+        iframe.set_attribute("id", &state.id).unwrap();
+        iframe.set_attribute("src", &state.src).unwrap();
+        iframe
+            .set_attribute(
+                "style",
+                &iframe_style!(state.rect, state.interactable, state.visible),
+            )
+            .unwrap();
+        body.append_child(&iframe).unwrap();
+    }
+}
+
+fn show_iframe_window(ctx: &egui::Context, state: &mut IframeWindowState) {
+    let shown_window = egui::Window::new(&state.title)
+        .id(egui::Id::new(&state.id))
+        .open(&mut state.open)
+        .show(ctx, |ui| {
             ui.centered_and_justified(|ui| {
                 ui.label("");
                 // TODO: Display a loader here only when the iframe is actually loading.
@@ -94,23 +130,13 @@ impl eframe::App for TemplateApp {
             .rect
         });
 
-        if let Some(shown_window) = shown_window {
-            let interactable = ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary));
-            self.iframe_handles.create_or_update(
-                "web-iframe-content",
-                TEST_URL,
-                shown_window.inner.unwrap_or(egui::Rect::ZERO),
-                interactable,
-                true,
-            );
-        } else {
-            self.iframe_handles.create_or_update(
-                "web-iframe-content",
-                TEST_URL,
-                egui::Rect::ZERO,
-                false,
-                false,
-            );
-        }
+    if let Some(shown_window) = shown_window {
+        state.interactable = ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary));
+        state.visible = true;
+        state.rect = shown_window.inner.unwrap();
+        sync_iframe(state);
+    } else {
+        state.visible = false;
+        sync_iframe(state);
     }
 }
