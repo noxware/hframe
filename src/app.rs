@@ -1,5 +1,7 @@
 use egui::ahash::HashMap;
 
+const TEST_URL: &str = "https://www.example.com/";
+
 macro_rules! iframe_style {
     ($rect:expr, $interactable:expr, $visible:expr) => {
         format!(
@@ -22,6 +24,7 @@ macro_rules! iframe_style {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! log {
     ($($t:tt)*) => {
         web_sys::console::log_1(&format!($($t)*).into());
@@ -83,9 +86,9 @@ impl TemplateApp {
 impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let shown_window = egui::Window::new("Webview").show(ctx, |ui| {
-            //ui.visuals().window_fill;
             ui.centered_and_justified(|ui| {
-                ui.label("<web-iframe-content>");
+                ui.label("");
+                // TODO: Display a loader here only when the iframe is actually loading.
             })
             .response
             .rect
@@ -93,10 +96,9 @@ impl eframe::App for TemplateApp {
 
         if let Some(shown_window) = shown_window {
             let interactable = ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary));
-            // let focused;
             self.iframe_handles.create_or_update(
                 "web-iframe-content",
-                "https://www.example.org/",
+                TEST_URL,
                 shown_window.inner.unwrap_or(egui::Rect::ZERO),
                 interactable,
                 true,
@@ -104,7 +106,7 @@ impl eframe::App for TemplateApp {
         } else {
             self.iframe_handles.create_or_update(
                 "web-iframe-content",
-                "https://www.example.org/",
+                TEST_URL,
                 egui::Rect::ZERO,
                 false,
                 false,
