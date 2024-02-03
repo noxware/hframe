@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 
+use serde::Serialize;
+
 const TEST_URL: &str = "https://www.example.com/";
 
 macro_rules! iframe_style {
-    ($rect:expr, $interactable:expr, $visible:expr) => {
+    ($id:expr, $rect:expr, $interactable:expr, $visible:expr) => {
         format!(
-            "border: none; position: absolute; top: {}px; left: {}px; width: {}px; height: {}px; {}; {}",
+            "border: none; position: absolute; top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; clip-path: url(#iframe-clip-{});",
             $rect.min.y,
             $rect.min.x,
             $rect.width(),
@@ -19,7 +21,8 @@ macro_rules! iframe_style {
                 ""
             } else {
                 "visibility: hidden;"
-            }
+            },
+            $id
         )
     };
 }
@@ -38,12 +41,12 @@ pub struct TemplateApp {
     iframes: IframeRegistry,
 }
 
+#[derive(Debug, Serialize)]
 struct IframeAware {
-    layer_id: egui::LayerId,
     rect: egui::Rect,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Serialize)]
 struct IframeAwares(HashMap<egui::Id, IframeAware>);
 
 impl IframeAwares {
@@ -54,9 +57,8 @@ impl IframeAwares {
         let inner_response = inner_response?;
         let response = &inner_response.response;
         self.0.insert(
-            response.id,
+            response.layer_id.id,
             IframeAware {
-                layer_id: response.layer_id,
                 rect: response.rect,
             },
         );
@@ -64,7 +66,36 @@ impl IframeAwares {
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, Serialize)]
+struct IframeWindowState {
+    // All of these should be considered private.
+    id: String,
+    title: String,
+    src: String,
+    // Specially the following internal ones.
+    open: bool,
+    egui_id: egui::Id,
+    rect: egui::Rect,
+    interactable: bool,
+    visible: bool,
+}
+
+impl IframeWindowState {
+    fn new(id: &str, title: &str, src: &str) -> Self {
+        Self {
+            id: id.to_string(),
+            title: title.to_string(),
+            src: src.to_string(),
+            rect: egui::Rect::ZERO,
+            egui_id: egui::Id::new(id),
+            open: true,
+            interactable: true,
+            visible: true,
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize)]
 struct IframeRegistry {
     iframes: Vec<IframeWindowState>,
     iframe_awares: IframeAwares,
@@ -109,33 +140,62 @@ impl IframeRegistry {
                 sync_iframe(state);
             }
         }
+
+        self.clip(ctx);
+    }
+
+    fn clip(&mut self, ctx: &egui::Context) {
+        ctx.memory(|mem| {
+            let sorted_awares = mem
+                .layer_ids()
+                .filter_map(|layer_id| {
+                    self.iframe_awares
+                        .0
+                        .get(&layer_id.id)
+                        .map(|aware| (layer_id.id, aware.rect))
+                })
+                .collect::<Vec<_>>();
+
+            let sorted_awares = sorted_awares.iter().rev().collect::<Vec<_>>();
+
+            let mut clip_pathes = String::new();
+
+            for (index, (id, _rect)) in sorted_awares.iter().enumerate() {
+                if let Some(iframe) = self
+                    .iframes
+                    .iter()
+                    .find(|iframe| egui::Id::new(&iframe.id) == *id)
+                {
+                    log!("running");
+                    clip_pathes.push_str(&format!("<clipPath id=\"iframe-clip-{}\">", iframe.id));
+
+                    let prev = &sorted_awares[0..index];
+                    for (_id, rect) in prev {
+                        let relative = rect_to_relative(*rect, iframe.rect);
+                        clip_pathes.push_str(&format!(
+                            "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" />",
+                            relative.min.x,
+                            relative.min.y,
+                            relative.width(),
+                            relative.height()
+                        ));
+                    }
+                    clip_pathes.push_str("</clipPath>");
+                }
+            }
+
+            let window = web_sys::window().unwrap();
+            let document = window.document().unwrap();
+            let defs = document.get_element_by_id("iframe-clip-defs").unwrap();
+            defs.set_inner_html(&clip_pathes);
+        });
     }
 }
 
-struct IframeWindowState {
-    // All of these should be considered private.
-    id: String,
-    title: String,
-    src: String,
-    // Specially the following internal ones.
-    open: bool,
-    rect: egui::Rect,
-    interactable: bool,
-    visible: bool,
-}
-
-impl IframeWindowState {
-    fn new(id: &str, title: &str, src: &str) -> Self {
-        Self {
-            id: id.to_string(),
-            title: title.to_string(),
-            src: src.to_string(),
-            rect: egui::Rect::ZERO,
-            open: true,
-            interactable: true,
-            visible: true,
-        }
-    }
+fn rect_to_relative(rect: egui::Rect, parent: egui::Rect) -> egui::Rect {
+    let min = rect.min - parent.min;
+    let max = rect.max - parent.min;
+    egui::Rect::from_min_max(min.to_pos2(), max.to_pos2())
 }
 
 impl TemplateApp {
@@ -167,6 +227,8 @@ impl eframe::App for TemplateApp {
 
         self.iframes.aware(devtools);
         self.iframes.show(ctx);
+
+        log!("{}", serde_json::to_string_pretty(&self.iframes).unwrap());
     }
 }
 
@@ -181,6 +243,6 @@ fn sync_iframe(state: &IframeWindowState) {
         body.append_child(&iframe).unwrap();
         iframe
     });
-    let style = iframe_style!(state.rect, state.interactable, state.visible);
+    let style = iframe_style!(state.id, state.rect, state.interactable, state.visible);
     element.set_attribute("style", &style).unwrap();
 }
