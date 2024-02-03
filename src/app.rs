@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 const TEST_URL: &str = "https://www.example.com/";
 
 macro_rules! iframe_style {
@@ -33,7 +35,82 @@ macro_rules! log {
 pub struct TemplateApp {
     iframe_id_counter: usize,
     new_iframe_src: String,
+    iframes: IframeRegistry,
+}
+
+struct IframeAware {
+    layer_id: egui::LayerId,
+    rect: egui::Rect,
+}
+
+#[derive(Default)]
+struct IframeAwares(HashMap<egui::Id, IframeAware>);
+
+impl IframeAwares {
+    fn insert<R>(
+        &mut self,
+        inner_response: Option<egui::InnerResponse<R>>,
+    ) -> Option<egui::InnerResponse<R>> {
+        let inner_response = inner_response?;
+        let response = &inner_response.response;
+        self.0.insert(
+            response.id,
+            IframeAware {
+                layer_id: response.layer_id,
+                rect: response.rect,
+            },
+        );
+        Some(inner_response)
+    }
+}
+
+#[derive(Default)]
+struct IframeRegistry {
     iframes: Vec<IframeWindowState>,
+    iframe_awares: IframeAwares,
+}
+
+impl IframeRegistry {
+    fn iframe_aware<R>(
+        &mut self,
+        inner_response: impl FnOnce() -> Option<egui::InnerResponse<R>>,
+    ) -> Option<egui::InnerResponse<R>> {
+        let inner_response = inner_response();
+        self.iframe_awares.insert(inner_response)
+    }
+
+    fn insert(&mut self, id: &str, title: &str, src: &str) {
+        self.iframes.push(IframeWindowState::new(id, title, src));
+    }
+
+    fn show_iframe_windows(&mut self, ctx: &egui::Context) {
+        for state in &mut self.iframes {
+            let shown_window = egui::Window::new(&state.title)
+                .id(egui::Id::new(&state.id))
+                .open(&mut state.open)
+                .show(ctx, |ui| {
+                    ui.centered_and_justified(|ui| {
+                        ui.label("");
+                        // TODO: Display a loader here only when the iframe is actually loading.
+                    })
+                    .response
+                    .rect
+                });
+
+            let shown_window = self.iframe_awares.insert(shown_window);
+
+            if let Some(shown_window) = shown_window {
+                state.interactable =
+                    ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary));
+                state.visible = shown_window.inner.is_some();
+                state.rect = shown_window.inner.unwrap_or(state.rect);
+                sync_iframe(state);
+            } else {
+                state.visible = false;
+                sync_iframe(state);
+            }
+        }
+    }
 }
 
 struct IframeWindowState {
@@ -80,18 +157,16 @@ impl eframe::App for TemplateApp {
                 if ui.button("Add").clicked() {
                     self.iframe_id_counter += 1;
 
-                    self.iframes.push(IframeWindowState::new(
+                    self.iframes.insert(
                         &format!("iframe-{}", self.iframe_id_counter),
                         &format!("Iframe {}", self.iframe_id_counter),
                         &self.new_iframe_src,
-                    ));
+                    );
                 }
             });
         });
 
-        for state in &mut self.iframes {
-            show_iframe_window(ctx, state);
-        }
+        self.iframes.show_iframe_windows(ctx);
     }
 }
 
@@ -108,28 +183,4 @@ fn sync_iframe(state: &IframeWindowState) {
     });
     let style = iframe_style!(state.rect, state.interactable, state.visible);
     element.set_attribute("style", &style).unwrap();
-}
-
-fn show_iframe_window(ctx: &egui::Context, state: &mut IframeWindowState) {
-    let shown_window = egui::Window::new(&state.title)
-        .id(egui::Id::new(&state.id))
-        .open(&mut state.open)
-        .show(ctx, |ui| {
-            ui.centered_and_justified(|ui| {
-                ui.label("");
-                // TODO: Display a loader here only when the iframe is actually loading.
-            })
-            .response
-            .rect
-        });
-
-    if let Some(shown_window) = shown_window {
-        state.interactable = ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary));
-        state.visible = shown_window.inner.is_some();
-        state.rect = shown_window.inner.unwrap_or(state.rect);
-        sync_iframe(state);
-    } else {
-        state.visible = false;
-        sync_iframe(state);
-    }
 }
