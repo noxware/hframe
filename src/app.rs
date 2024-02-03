@@ -82,7 +82,7 @@ impl IframeRegistry {
         self.iframes.push(IframeWindowState::new(id, title, src));
     }
 
-    fn show_windows(&mut self, ctx: &egui::Context) {
+    fn show(&mut self, ctx: &egui::Context) {
         for state in &mut self.iframes {
             let shown_window = egui::Window::new(&state.title)
                 .id(egui::Id::new(&state.id))
@@ -166,7 +166,7 @@ impl eframe::App for TemplateApp {
         });
 
         self.iframes.aware(devtools);
-        self.iframes.show_windows(ctx);
+        self.iframes.show(ctx);
     }
 }
 
