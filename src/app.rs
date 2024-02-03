@@ -71,11 +71,10 @@ struct IframeRegistry {
 }
 
 impl IframeRegistry {
-    fn iframe_aware<R>(
+    fn aware<R>(
         &mut self,
-        inner_response: impl FnOnce() -> Option<egui::InnerResponse<R>>,
+        inner_response: Option<egui::InnerResponse<R>>,
     ) -> Option<egui::InnerResponse<R>> {
-        let inner_response = inner_response();
         self.iframe_awares.insert(inner_response)
     }
 
@@ -83,7 +82,7 @@ impl IframeRegistry {
         self.iframes.push(IframeWindowState::new(id, title, src));
     }
 
-    fn show_iframe_windows(&mut self, ctx: &egui::Context) {
+    fn show_windows(&mut self, ctx: &egui::Context) {
         for state in &mut self.iframes {
             let shown_window = egui::Window::new(&state.title)
                 .id(egui::Id::new(&state.id))
@@ -150,7 +149,7 @@ impl TemplateApp {
 
 impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::Window::new("Devtools").show(ctx, |ui| {
+        let devtools = egui::Window::new("Devtools").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label("New iframe:");
                 ui.text_edit_singleline(&mut self.new_iframe_src);
@@ -166,7 +165,8 @@ impl eframe::App for TemplateApp {
             });
         });
 
-        self.iframes.show_iframe_windows(ctx);
+        self.iframes.aware(devtools);
+        self.iframes.show_windows(ctx);
     }
 }
 
