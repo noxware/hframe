@@ -1,9 +1,11 @@
-const TEST_URL: &str = "https://www.example.com/";
+use egui::{ahash::HashSet, mutex::Mutex};
+use std::sync::Arc;
 
+const TEST_URL: &str = "https://www.youtube.com/embed/OlmFm9qfbgc";
 macro_rules! iframe_style {
     ($rect:expr, $interactable:expr, $visible:expr) => {
         format!(
-            "border: none; position: absolute; top: {}px; left: {}px; width: {}px; height: {}px; {}; {}",
+            "border: none; position: absolute; top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; clip-path: circle(50%)",
             $rect.min.y,
             $rect.min.x,
             $rect.width(),
@@ -35,6 +37,11 @@ pub struct TemplateApp {
     new_iframe_src: String,
     iframes: Vec<IframeWindowState>,
 }
+
+#[derive(Default, Clone)]
+struct IframeWindows(Arc<Mutex<HashSet<u64>>>);
+
+const IFRAME_WINDOWS: &str = "iframe_windows";
 
 struct IframeWindowState {
     // All of these should be considered private.
@@ -74,24 +81,40 @@ impl TemplateApp {
 impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::Window::new("Devtools").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.label("New iframe:");
-                ui.text_edit_singleline(&mut self.new_iframe_src);
-                if ui.button("Add").clicked() {
-                    self.iframe_id_counter += 1;
+            ui.vertical(|ui| {
+                ui.horizontal(|ui| {
+                    ui.label("New iframe:");
+                    ui.text_edit_singleline(&mut self.new_iframe_src);
+                    if ui.button("Add").clicked() {
+                        self.iframe_id_counter += 1;
 
-                    self.iframes.push(IframeWindowState::new(
-                        &format!("iframe-{}", self.iframe_id_counter),
-                        &format!("Iframe {}", self.iframe_id_counter),
-                        &self.new_iframe_src,
-                    ));
-                }
-            });
+                        self.iframes.push(IframeWindowState::new(
+                            &format!("iframe-{}", self.iframe_id_counter),
+                            &format!("Iframe {}", self.iframe_id_counter),
+                            &self.new_iframe_src,
+                        ));
+                    }
+                });
+                ctx.memory_ui(ui);
+            })
         });
 
         for state in &mut self.iframes {
             show_iframe_window(ctx, state);
         }
+
+        ctx.memory(|mem| {
+            if let Some(iframe_windows) = mem
+                .data
+                .get_temp::<IframeWindows>(egui::Id::new(IFRAME_WINDOWS))
+            {
+                let areas = serde_json::to_value(mem.areas()).unwrap();
+
+                let sorted_layers = mem
+                    .layer_ids()
+                    .map(|layer| serde_json::to_value(layer.id).unwrap().as_u64().unwrap());
+            }
+        });
     }
 }
 
@@ -128,6 +151,17 @@ fn show_iframe_window(ctx: &egui::Context, state: &mut IframeWindowState) {
         state.visible = true;
         state.rect = shown_window.inner.unwrap();
         sync_iframe(state);
+        let internal_id = serde_json::to_value(shown_window.response.layer_id.id)
+            .unwrap()
+            .as_u64()
+            .unwrap();
+        ctx.memory_mut(|mem| {
+            let iframe_windows = mem
+                .data
+                .get_temp_mut_or_default::<IframeWindows>(egui::Id::new(IFRAME_WINDOWS));
+
+            iframe_windows.0.lock().insert(internal_id);
+        });
     } else {
         state.visible = false;
         sync_iframe(state);
