@@ -125,8 +125,8 @@ fn show_iframe_window(ctx: &egui::Context, state: &mut IframeWindowState) {
 
     if let Some(shown_window) = shown_window {
         state.interactable = ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary));
-        state.visible = true;
-        state.rect = shown_window.inner.unwrap();
+        state.visible = shown_window.inner.is_some();
+        state.rect = shown_window.inner.unwrap_or(state.rect);
         sync_iframe(state);
     } else {
         state.visible = false;
