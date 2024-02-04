@@ -260,6 +260,14 @@ impl TemplateApp {
 
 impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.iframes.aware({
+            egui::Window::new("None").show(ctx, |ui| {
+                ui.centered_and_justified(|ui| {
+                    ui.label("");
+                });
+            })
+        });
+
         let devtools = egui::Window::new("Devtools").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label("New iframe:");
