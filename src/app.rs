@@ -197,22 +197,17 @@ impl IframeRegistry {
                     .iter()
                     .find(|iframe| egui::Id::new(&iframe.id) == *id)
                 {
-                    let mut rects = String::new();
+                    let mut path = rect_to_path(&rect_to_relative(iframe.rect, iframe.rect), false);
                     let prev = &sorted_awares[0..index];
                     for (_id, rect) in prev {
                         let relative = rect_to_relative(*rect, iframe.rect);
-                        rects.push_str(&format!(
-                            "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" />",
-                            relative.min.x,
-                            relative.min.y,
-                            relative.width(),
-                            relative.height()
-                        ));
+                        path.push(' ');
+                        path.push_str(&rect_to_path(&relative, true));
                     }
 
                     clip_pathes.push_str(&format!(
-                        "<clipPath id=\"iframe-clip-{}\">{}</clipPath>",
-                        iframe.id, rects
+                        "<clipPath id=\"iframe-clip-{}\"><path fill-rule=\"evenodd\" d=\"{}\" /></clipPath>",
+                        iframe.id, path
                     ));
                 }
             }
@@ -229,6 +224,28 @@ fn rect_to_relative(rect: egui::Rect, parent: egui::Rect) -> egui::Rect {
     let min = rect.min - parent.min;
     let max = rect.max - parent.min;
     egui::Rect::from_min_max(min.to_pos2(), max.to_pos2())
+}
+
+fn rect_to_path(rect: &egui::Rect, dt: bool) -> String {
+    if !dt {
+        format!(
+            "M{},{}  h{} v{} h{} z",
+            rect.min.x,
+            rect.min.y,
+            rect.width(),
+            rect.height(),
+            -rect.width()
+        )
+    } else {
+        format!(
+            "M{},{}  v{} h{} v{} z",
+            rect.min.x,
+            rect.min.y,
+            rect.height(),
+            rect.width(),
+            -rect.height()
+        )
+    }
 }
 
 impl TemplateApp {
