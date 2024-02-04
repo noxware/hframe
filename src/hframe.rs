@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 const MASK_TEMPLATE: &str = r#"
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
@@ -105,6 +105,7 @@ impl HframeWindowState {
 pub struct HframeRegistry {
     hframes: Vec<HframeWindowState>,
     hframe_awares: HframeAwares,
+    hframes_since_last_sync: HashSet<String>,
 }
 
 impl HframeRegistry {
@@ -137,6 +138,7 @@ impl HframeRegistry {
         Self {
             hframes: Vec::new(),
             hframe_awares: HframeAwares::default(),
+            hframes_since_last_sync: HashSet::new(),
         }
     }
 
@@ -148,6 +150,8 @@ impl HframeRegistry {
     }
 
     pub fn show_window(&mut self, ctx: &egui::Context, id: &str, title: &str, content: &str) {
+        self.hframes_since_last_sync.insert(id.to_string());
+
         let state = self.hframes.iter_mut().find(|state| state.id == id);
         let state = match state {
             Some(state) => state,
@@ -226,7 +230,11 @@ impl HframeRegistry {
     }
 
     fn clean(&mut self) {
-        for state in &self.hframes {
+        for state in &mut self.hframes {
+            if !self.hframes_since_last_sync.contains(&state.id) {
+                state.open = false;
+            }
+
             if !state.open {
                 let window = web_sys::window().unwrap();
                 let document = window.document().unwrap();
@@ -237,6 +245,7 @@ impl HframeRegistry {
         }
 
         self.hframes.retain(|state| state.open);
+        self.hframes_since_last_sync.clear();
     }
 }
 

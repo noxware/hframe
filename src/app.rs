@@ -31,6 +31,7 @@ macro_rules! log {
 
 pub struct TemplateApp {
     count: i32,
+    video_open: bool,
     hframes: HframeRegistry,
 }
 
@@ -45,6 +46,7 @@ impl TemplateApp {
 
         Self {
             count: 0,
+            video_open: true,
             hframes: HframeRegistry::new(),
         }
     }
@@ -61,8 +63,17 @@ impl eframe::App for TemplateApp {
         });
 
         self.hframes.aware({
-            egui::Window::new("Counter Controls").show(ctx, |ui| {
+            egui::Window::new("Devtools").show(ctx, |ui| {
+                let video_toggle_text = if self.video_open {
+                    "Force close video"
+                } else {
+                    "Open video"
+                };
+                if ui.button(video_toggle_text).clicked() {
+                    self.video_open = !self.video_open;
+                }
                 ui.horizontal(|ui| {
+                    ui.label("Counter controls: ");
                     if ui.button("+").clicked() {
                         self.count += 1;
                     }
@@ -81,7 +92,11 @@ impl eframe::App for TemplateApp {
         );
 
         self.hframes.show_window(ctx, "iframe", "Iframe", IFRAME);
-        self.hframes.show_window(ctx, "video", "Video", VIDEO);
+
+        if self.video_open {
+            self.hframes.show_window(ctx, "video", "Video", VIDEO);
+        }
+
         self.hframes.show_window(ctx, "yt", "YT", YT);
 
         self.hframes.sync(ctx);
