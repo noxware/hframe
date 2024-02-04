@@ -2,37 +2,6 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 
-/*
-<svg viewBox="-10 -10 320 120" xmlns="http://www.w3.org/2000/svg">
-
-  <path
-    fill-rule="evenodd"
-    stroke="red"
-    d="M210,0  h90 v90 h-90 z
-           M230,20 v50 h50 v-50 z
-
-           M0,0  h90 v90 h-90 z
-           M30,20 v50 h50 v-50 z
-           " />
-</svg>
-*/
-
-/*
-<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
-  <clipPath id="clipRectWithHoles">
-    <rect x="0" y="0" width="50" height="300"/>
-    <rect x="0" y="0" width="300" height="50"/>
-    <rect x="250" y="0" width="50" height="300"/>
-    <rect x="0" y="250" width="300" height="50"/>
-
-  </clipPath>
-
-  <!-- Apply the clipping path to an element -->
-  <rect width="300" height="300" fill="blue" clip-path="url(#clipRectWithHoles)"/>
-</svg>
-
-*/
-
 const TEST_URL: &str = "https://www.example.com/";
 
 macro_rules! iframe_style {
