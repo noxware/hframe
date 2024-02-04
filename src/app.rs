@@ -4,10 +4,25 @@ use serde::Serialize;
 
 const TEST_URL: &str = "https://www.example.com/";
 
+const MASK_TEMPLATE: &str = r#"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
+  <defs>
+    <mask id="mask" x="0" y="0" width="{width}" height="{height}">
+      <rect x="0" y="0" width="{width}" height="{height}" fill="white" />
+      {holes}      
+    </mask>
+  </defs>
+  <rect x="0" y="0" width="{width}" height="{height}" fill="blue" mask="url(#mask)" />
+</svg>
+"#;
+
+const HOLE_TEMPLATE: &str =
+    r#"<rect x="{x}" y="{y}" width="{width}" height="{height}" fill="black" />"#;
+
 macro_rules! iframe_style {
     ($state:expr) => {
         format!(
-            "border: none; position: absolute; top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; clip-path: url(#iframe-clip-{});",
+            "border: none; position: absolute; mask-mode: luminance; -webkit-mask-mode: luminance; top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; mask: url({}); -webkit-mask: url({});",
             $state.rect.min.y,
             $state.rect.min.x,
             $state.rect.width(),
@@ -22,7 +37,8 @@ macro_rules! iframe_style {
             } else {
                 "visibility: hidden;"
             },
-            $state.id
+            $state.mask,
+            $state.mask
         )
     };
 }
@@ -78,6 +94,7 @@ struct IframeWindowState {
     rect: egui::Rect,
     interactable: bool,
     visible: bool,
+    mask: String,
 }
 
 impl IframeWindowState {
@@ -91,6 +108,7 @@ impl IframeWindowState {
             open: true,
             interactable: true,
             visible: true,
+            mask: build_mask_uri(egui::Rect::ZERO, std::iter::empty()),
         }
     }
 }
@@ -135,14 +153,16 @@ impl IframeRegistry {
                     && ctx.top_layer_id() == Some(shown_window.response.layer_id);
                 state.visible = shown_window.inner.is_some();
                 state.rect = shown_window.inner.unwrap_or(state.rect);
-                sync_iframe(state);
             } else {
                 state.visible = false;
-                sync_iframe(state);
             }
         }
 
         self.clip(ctx);
+
+        for state in &self.iframes {
+            sync_iframe(state);
+        }
     }
 
     fn clip(&mut self, ctx: &egui::Context) {
@@ -159,33 +179,16 @@ impl IframeRegistry {
 
             let sorted_awares = sorted_awares.iter().rev().collect::<Vec<_>>();
 
-            let mut clip_pathes = String::new();
-
             for (index, (id, _rect)) in sorted_awares.iter().enumerate() {
                 if let Some(iframe) = self
                     .iframes
-                    .iter()
+                    .iter_mut()
                     .find(|iframe| egui::Id::new(&iframe.id) == *id)
                 {
-                    let mut path = rect_to_path(&rect_to_relative(iframe.rect, iframe.rect), false);
-                    let prev = &sorted_awares[0..index];
-                    for (_id, rect) in prev {
-                        let relative = rect_to_relative(*rect, iframe.rect);
-                        path.push(' ');
-                        path.push_str(&rect_to_path(&relative, true));
-                    }
-
-                    clip_pathes.push_str(&format!(
-                        "<clipPath id=\"iframe-clip-{}\"><path fill-rule=\"evenodd\" d=\"{}\" /></clipPath>",
-                        iframe.id, path
-                    ));
+                    let prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
+                    iframe.mask = build_mask_uri(iframe.rect, prev_rects);
                 }
             }
-
-            let window = web_sys::window().unwrap();
-            let document = window.document().unwrap();
-            let defs = document.get_element_by_id("iframe-clip-defs").unwrap();
-            defs.set_inner_html(&clip_pathes);
         });
     }
 }
@@ -196,26 +199,26 @@ fn rect_to_relative(rect: egui::Rect, parent: egui::Rect) -> egui::Rect {
     egui::Rect::from_min_max(min.to_pos2(), max.to_pos2())
 }
 
-fn rect_to_path(rect: &egui::Rect, dt: bool) -> String {
-    if !dt {
-        format!(
-            "M{},{}  h{} v{} h{} z",
-            rect.min.x,
-            rect.min.y,
-            rect.width(),
-            rect.height(),
-            -rect.width()
-        )
-    } else {
-        format!(
-            "M{},{}  v{} h{} v{} z",
-            rect.min.x,
-            rect.min.y,
-            rect.height(),
-            rect.width(),
-            -rect.height()
-        )
-    }
+fn build_mask_uri<H: Iterator<Item = egui::Rect>>(parent: egui::Rect, holes: H) -> String {
+    let holes = holes.map(|hole| rect_to_relative(hole, parent));
+    let parent = rect_to_relative(parent, parent);
+
+    let holes = holes
+        .map(|hole| {
+            HOLE_TEMPLATE
+                .replace("{x}", &hole.min.x.to_string())
+                .replace("{y}", &hole.min.y.to_string())
+                .replace("{width}", &hole.width().to_string())
+                .replace("{height}", &hole.height().to_string())
+        })
+        .collect::<String>();
+
+    let svg = MASK_TEMPLATE
+        .replace("{width}", &parent.width().to_string())
+        .replace("{height}", &parent.height().to_string())
+        .replace("{holes}", &holes);
+
+    format!("data:image/svg+xml,{}", urlencoding::encode(&svg))
 }
 
 impl TemplateApp {
