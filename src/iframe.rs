@@ -141,9 +141,14 @@ impl IframeRegistry {
             let shown_window = self.iframe_awares.insert(shown_window);
 
             if let Some(shown_window) = shown_window {
+                let mouse_pos = ctx.input(|i| i.pointer.latest_pos());
+                let is_hovered = match mouse_pos {
+                    Some(pos) => ctx.layer_id_at(pos) == Some(shown_window.response.layer_id),
+                    None => true,
+                };
                 state.interactable = ctx
                     .input(|i| !i.pointer.button_down(egui::PointerButton::Primary))
-                    && ctx.top_layer_id() == Some(shown_window.response.layer_id);
+                    && (ctx.top_layer_id() == Some(shown_window.response.layer_id) || is_hovered);
                 state.visible = shown_window.inner.is_some();
                 state.rect = shown_window.inner.unwrap_or(state.rect);
             } else {
