@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 const MASK_TEMPLATE: &str = r#"
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
@@ -103,7 +103,6 @@ impl HframeWindowState {
 pub struct HframeRegistry {
     hframes: Vec<HframeWindowState>,
     hframe_awares: HframeAwares,
-    shown_since_last_render: HashSet<String>,
 }
 
 impl HframeRegistry {
@@ -136,7 +135,6 @@ impl HframeRegistry {
         Self {
             hframes: Vec::new(),
             hframe_awares: HframeAwares::default(),
-            shown_since_last_render: HashSet::new(),
         }
     }
 
@@ -183,19 +181,6 @@ impl HframeRegistry {
         } else {
             state.visible = false;
         }
-        sync_hframe(state);
-
-        if !state.open {
-            let window = web_sys::window().unwrap();
-            let document = window.document().unwrap();
-            let element = document.get_element_by_id(&state.id).unwrap();
-            element.remove();
-            self.hframe_awares.0.remove(&eid!(&state.id));
-            self.hframes.retain(|state| state.id != id);
-        }
-
-        // TODO: Would be better if this happens before sync.
-        self.clip(ctx);
     }
 
     fn clip(&mut self, ctx: &egui::Context) {
@@ -223,6 +208,28 @@ impl HframeRegistry {
                 }
             }
         });
+    }
+
+    pub fn sync(&mut self, ctx: &egui::Context) {
+        self.clip(ctx);
+        for state in &self.hframes {
+            sync_hframe(state);
+        }
+        self.clean();
+    }
+
+    fn clean(&mut self) {
+        for state in &self.hframes {
+            if !state.open {
+                let window = web_sys::window().unwrap();
+                let document = window.document().unwrap();
+                let element = document.get_element_by_id(&state.id).unwrap();
+                element.remove();
+                self.hframe_awares.0.remove(&eid!(&state.id));
+            }
+        }
+
+        self.hframes.retain(|state| state.open);
     }
 }
 

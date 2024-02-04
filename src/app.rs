@@ -40,7 +40,7 @@ impl eframe::App for TemplateApp {
         self.hframes.aware({
             egui::Window::new("None").show(ctx, |ui| {
                 ui.centered_and_justified(|ui| {
-                    ui.label("");
+                    ui.label("Empty");
                 });
             })
         });
@@ -48,5 +48,7 @@ impl eframe::App for TemplateApp {
         self.hframes.show(ctx, "iframe", "Iframe", IFRAME_URL);
         self.hframes.show(ctx, "video", "Video", VIDEO_URL);
         self.hframes.show(ctx, "yt", "YT", YT_URL);
+
+        self.hframes.sync(ctx);
     }
 }
