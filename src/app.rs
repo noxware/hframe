@@ -1,4 +1,4 @@
-use crate::iframe::IframeRegistry;
+use crate::hframe::HframeRegistry;
 
 const IFRAME_URL: &str = r#"
 <iframe src="https://www.example.com/"></iframe>
@@ -24,24 +24,24 @@ macro_rules! log {
 }
 
 pub struct TemplateApp {
-    iframe_id_counter: usize,
-    new_iframe_content: String,
-    iframes: IframeRegistry,
+    hframe_id_counter: usize,
+    new_hframe_content: String,
+    hframes: HframeRegistry,
 }
 
 impl TemplateApp {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         Self {
-            new_iframe_content: IFRAME_URL.to_string(),
-            iframes: IframeRegistry::new(),
-            iframe_id_counter: 0,
+            new_hframe_content: IFRAME_URL.to_string(),
+            hframes: HframeRegistry::new(),
+            hframe_id_counter: 0,
         }
     }
 }
 
 impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.iframes.aware({
+        self.hframes.aware({
             egui::Window::new("None").show(ctx, |ui| {
                 ui.centered_and_justified(|ui| {
                     ui.label("");
@@ -53,31 +53,31 @@ impl eframe::App for TemplateApp {
             ui.vertical(|ui| {
                 ui.horizontal(|ui| {
                     if ui.button("Spawn Iframe").clicked() {
-                        self.iframe_id_counter += 1;
+                        self.hframe_id_counter += 1;
 
-                        self.iframes.insert(
-                            &format!("iframe-{}", self.iframe_id_counter),
-                            &format!("Iframe {}", self.iframe_id_counter),
+                        self.hframes.insert(
+                            &format!("iframe-{}", self.hframe_id_counter),
+                            &format!("Iframe {}", self.hframe_id_counter),
                             IFRAME_URL,
                         );
                     }
 
                     if ui.button("Spawn Video").clicked() {
-                        self.iframe_id_counter += 1;
+                        self.hframe_id_counter += 1;
 
-                        self.iframes.insert(
-                            &format!("video-{}", self.iframe_id_counter),
-                            &format!("Video {}", self.iframe_id_counter),
+                        self.hframes.insert(
+                            &format!("video-{}", self.hframe_id_counter),
+                            &format!("Video {}", self.hframe_id_counter),
                             VIDEO_URL,
                         );
                     }
 
                     if ui.button("Spawn Youtube").clicked() {
-                        self.iframe_id_counter += 1;
+                        self.hframe_id_counter += 1;
 
-                        self.iframes.insert(
-                            &format!("yt-{}", self.iframe_id_counter),
-                            &format!("Youtube {}", self.iframe_id_counter),
+                        self.hframes.insert(
+                            &format!("yt-{}", self.hframe_id_counter),
+                            &format!("Youtube {}", self.hframe_id_counter),
                             YT_URL,
                         );
                     }
@@ -85,21 +85,21 @@ impl eframe::App for TemplateApp {
 
                 ui.horizontal(|ui| {
                     ui.label("Custom content:");
-                    ui.text_edit_multiline(&mut self.new_iframe_content);
+                    ui.text_edit_multiline(&mut self.new_hframe_content);
                     if ui.button("Add").clicked() {
-                        self.iframe_id_counter += 1;
+                        self.hframe_id_counter += 1;
 
-                        self.iframes.insert(
-                            &format!("custom-{}", self.iframe_id_counter),
-                            &format!("custom {}", self.iframe_id_counter),
-                            &self.new_iframe_content,
+                        self.hframes.insert(
+                            &format!("custom-{}", self.hframe_id_counter),
+                            &format!("custom {}", self.hframe_id_counter),
+                            &self.new_hframe_content,
                         );
                     }
                 });
             });
         });
 
-        self.iframes.aware(devtools);
-        self.iframes.show(ctx);
+        self.hframes.aware(devtools);
+        self.hframes.show(ctx);
     }
 }

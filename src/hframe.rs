@@ -21,7 +21,7 @@ macro_rules! eid {
     };
 }
 
-macro_rules! iframe_style {
+macro_rules! hframe_style {
         ($state:expr) => {
             format!(
                 "top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; mask: url({}); -webkit-mask: url({});",
@@ -46,14 +46,14 @@ macro_rules! iframe_style {
     }
 
 #[derive(Debug)]
-struct IframeAware {
+struct HframeAware {
     rect: egui::Rect,
 }
 
 #[derive(Default, Debug)]
-struct IframeAwares(HashMap<egui::Id, IframeAware>);
+struct HframeAwares(HashMap<egui::Id, HframeAware>);
 
-impl IframeAwares {
+impl HframeAwares {
     fn insert<R>(
         &mut self,
         inner_response: Option<egui::InnerResponse<R>>,
@@ -62,7 +62,7 @@ impl IframeAwares {
         let response = &inner_response.response;
         self.0.insert(
             response.layer_id.id,
-            IframeAware {
+            HframeAware {
                 rect: response.rect,
             },
         );
@@ -71,7 +71,7 @@ impl IframeAwares {
 }
 
 #[derive(Debug, Clone)]
-struct IframeWindowState {
+struct HframeWindowState {
     // All of these should be considered private.
     id: String,
     title: String,
@@ -84,7 +84,7 @@ struct IframeWindowState {
     mask: String,
 }
 
-impl IframeWindowState {
+impl HframeWindowState {
     fn new(id: &str, title: &str, content: &str) -> Self {
         Self {
             id: id.to_string(),
@@ -100,18 +100,18 @@ impl IframeWindowState {
 }
 
 #[derive(Debug)]
-pub struct IframeRegistry {
-    iframes: Vec<IframeWindowState>,
-    iframe_awares: IframeAwares,
+pub struct HframeRegistry {
+    hframes: Vec<HframeWindowState>,
+    hframe_awares: HframeAwares,
 }
 
-impl IframeRegistry {
+impl HframeRegistry {
     pub fn new() -> Self {
         let style = web_sys::window()
             .unwrap()
             .document()
             .unwrap()
-            .query_selector("#iframe-shared-styles")
+            .query_selector("#hframe-shared-styles")
             .unwrap();
 
         if style.is_none() {
@@ -125,16 +125,16 @@ impl IframeRegistry {
             head.insert_adjacent_html(
                 "beforeend",
                 &format!(
-                    "<style id=\"iframe-shared-styles\">{}</style>",
-                    include_str!("iframe.css")
+                    "<style id=\"hframe-shared-styles\">{}</style>",
+                    include_str!("hframe.css")
                 ),
             )
             .unwrap();
         }
 
         Self {
-            iframes: Vec::new(),
-            iframe_awares: IframeAwares::default(),
+            hframes: Vec::new(),
+            hframe_awares: HframeAwares::default(),
         }
     }
 
@@ -142,12 +142,12 @@ impl IframeRegistry {
         &mut self,
         inner_response: Option<egui::InnerResponse<R>>,
     ) -> Option<egui::InnerResponse<R>> {
-        self.iframe_awares.insert(inner_response)
+        self.hframe_awares.insert(inner_response)
     }
 
     pub fn insert(&mut self, id: &str, title: &str, content: &str) {
-        self.iframes
-            .push(IframeWindowState::new(id, title, content));
+        self.hframes
+            .push(HframeWindowState::new(id, title, content));
     }
 
     pub fn show(&mut self, ctx: &egui::Context) {
@@ -158,20 +158,19 @@ impl IframeRegistry {
     }
 
     fn compute_states(&mut self, ctx: &egui::Context) {
-        for state in &mut self.iframes {
+        for state in &mut self.hframes {
             let shown_window = egui::Window::new(&state.title)
                 .id(eid!(&state.id))
                 .open(&mut state.open)
                 .show(ctx, |ui| {
                     ui.centered_and_justified(|ui| {
                         ui.label("");
-                        // TODO: Display a loader here only when the iframe is actually loading.
                     })
                     .response
                     .rect
                 });
 
-            let shown_window = self.iframe_awares.insert(shown_window);
+            let shown_window = self.hframe_awares.insert(shown_window);
 
             if let Some(shown_window) = shown_window {
                 state.interactable = ctx
@@ -190,7 +189,7 @@ impl IframeRegistry {
             let sorted_awares = mem
                 .layer_ids()
                 .filter_map(|layer_id| {
-                    self.iframe_awares
+                    self.hframe_awares
                         .0
                         .get(&layer_id.id)
                         .map(|aware| (layer_id.id, aware.rect))
@@ -200,36 +199,36 @@ impl IframeRegistry {
             let sorted_awares = sorted_awares.iter().rev().collect::<Vec<_>>();
 
             for (index, (id, _rect)) in sorted_awares.iter().enumerate() {
-                if let Some(iframe) = self
-                    .iframes
+                if let Some(hframe) = self
+                    .hframes
                     .iter_mut()
-                    .find(|iframe| eid!(&iframe.id) == *id)
+                    .find(|hframe| eid!(&hframe.id) == *id)
                 {
                     let prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
-                    iframe.mask = build_mask_uri(iframe.rect, prev_rects);
+                    hframe.mask = build_mask_uri(hframe.rect, prev_rects);
                 }
             }
         });
     }
 
     fn sync(&mut self) {
-        for state in &self.iframes {
-            sync_iframe(state);
+        for state in &self.hframes {
+            sync_hframe(state);
         }
     }
 
     fn clean(&mut self) {
-        for state in &self.iframes {
+        for state in &self.hframes {
             if !state.open {
                 let window = web_sys::window().unwrap();
                 let document = window.document().unwrap();
                 let element = document.get_element_by_id(&state.id).unwrap();
                 element.remove();
-                self.iframe_awares.0.remove(&eid!(&state.id));
+                self.hframe_awares.0.remove(&eid!(&state.id));
             }
         }
 
-        self.iframes.retain(|state| state.open);
+        self.hframes.retain(|state| state.open);
     }
 }
 
@@ -261,18 +260,18 @@ fn build_mask_uri<H: Iterator<Item = egui::Rect>>(parent: egui::Rect, holes: H) 
     format!("data:image/svg+xml,{}", urlencoding::encode(&svg))
 }
 
-fn sync_iframe(state: &IframeWindowState) {
+fn sync_hframe(state: &HframeWindowState) {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
     let element = document.get_element_by_id(&state.id).unwrap_or_else(|| {
         let body = document.body().unwrap();
-        let iframe = document.create_element("div").unwrap();
-        iframe.set_attribute("id", &state.id).unwrap();
-        iframe.set_inner_html(&state.content);
-        body.append_child(&iframe).unwrap();
-        iframe
+        let hframe = document.create_element("div").unwrap();
+        hframe.set_attribute("id", &state.id).unwrap();
+        hframe.set_inner_html(&state.content);
+        body.append_child(&hframe).unwrap();
+        hframe
     });
-    let style = iframe_style!(state);
-    element.set_attribute("class", "iframe").unwrap();
+    let style = hframe_style!(state);
+    element.set_attribute("class", "hframe").unwrap();
     element.set_attribute("style", &style).unwrap();
 }

@@ -1,5 +1,5 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 mod app;
-mod iframe;
+mod hframe;
 pub use app::TemplateApp;
