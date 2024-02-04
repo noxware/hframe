@@ -1,7 +1,6 @@
 [package]
-name = "eframe_template"
+name = "egui-hframe"
 version = "0.1.0"
-authors = ["Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"]
 edition = "2021"
 rust-version = "1.72"
 
@@ -18,7 +17,13 @@ log = "0.4"
 
 # You only need serde if you want app persistence:
 serde = { version = "1", features = ["derive"] }
-web-sys = { version = "0.3.67", features = ["Window", "Document", "HtmlBodyElement", "console", "HtmlHeadElement"] }
+web-sys = { version = "0.3.67", features = [
+    "Window",
+    "Document",
+    "HtmlBodyElement",
+    "console",
+    "HtmlHeadElement",
+] }
 serde_json = "1.0.113"
 urlencoding = "2.1.3"
 

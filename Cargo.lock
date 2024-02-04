@@ -856,21 +856,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "eframe_template"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "egui",
- "env_logger",
- "log",
- "serde",
- "serde_json",
- "urlencoding",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
 name = "egui"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -883,6 +868,21 @@ dependencies = [
  "nohash-hasher",
  "ron",
  "serde",
+]
+
+[[package]]
+name = "egui-hframe"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "env_logger",
+ "log",
+ "serde",
+ "serde_json",
+ "urlencoding",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
