@@ -82,6 +82,7 @@ struct HframeWindowState {
     interactable: bool,
     visible: bool,
     mask: String,
+    content_changed: bool,
 }
 
 impl HframeWindowState {
@@ -95,6 +96,7 @@ impl HframeWindowState {
             interactable: true,
             visible: true,
             mask: build_mask_uri(egui::Rect::ZERO, std::iter::empty()),
+            content_changed: false,
         }
     }
 }
@@ -156,8 +158,13 @@ impl HframeRegistry {
             }
         };
 
+        state.content_changed = state.content != content;
+
+        if state.content_changed {
+            state.content = content.to_string();
+        }
+
         state.title = title.to_string();
-        state.content = content.to_string();
 
         let shown_window = egui::Window::new(&state.title)
             .id(eid!(&state.id))
@@ -272,6 +279,11 @@ fn sync_hframe(state: &HframeWindowState) {
         body.append_child(&hframe).unwrap();
         hframe
     });
+
+    if state.content_changed {
+        element.set_inner_html(&state.content);
+    }
+
     let style = hframe_style!(state);
     element.set_attribute("class", "hframe").unwrap();
     element.set_attribute("style", &style).unwrap();

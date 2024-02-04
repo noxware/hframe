@@ -1,10 +1,10 @@
 use crate::hframe::HframeRegistry;
 
-const IFRAME_URL: &str = r#"
+const IFRAME: &str = r#"
 <iframe src="https://www.example.com/"></iframe>
 "#;
 
-const VIDEO_URL: &str = r#"
+const VIDEO: &str = r#"
 <video controls>
     <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
     <source src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
@@ -12,8 +12,14 @@ const VIDEO_URL: &str = r#"
 </video>
 "#;
 
-const YT_URL: &str = r#"
+const YT: &str = r#"
 <iframe width="1280" height="720" src="https://www.youtube.com/embed/PCp2iXA1uLE" title="FREDERIC 「oddloop」Music Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+"#;
+
+const COUNTER_TEMPLATE: &str = r#"
+<div style="display: flex; justify-content: center; align-items: center; padding: 8px; color: red; font: 36px sans-serif;">
+    <span>{count}</span>
+</div>
 "#;
 
 #[allow(unused_macros)]
@@ -24,12 +30,14 @@ macro_rules! log {
 }
 
 pub struct TemplateApp {
+    count: i32,
     hframes: HframeRegistry,
 }
 
 impl TemplateApp {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         Self {
+            count: 0,
             hframes: HframeRegistry::new(),
         }
     }
@@ -45,9 +53,29 @@ impl eframe::App for TemplateApp {
             })
         });
 
-        self.hframes.show(ctx, "iframe", "Iframe", IFRAME_URL);
-        self.hframes.show(ctx, "video", "Video", VIDEO_URL);
-        self.hframes.show(ctx, "yt", "YT", YT_URL);
+        self.hframes.aware({
+            egui::Window::new("Counter Controls").show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.button("+").clicked() {
+                        self.count += 1;
+                    }
+                    if ui.button("-").clicked() {
+                        self.count -= 1;
+                    }
+                });
+            })
+        });
+
+        self.hframes.show(
+            ctx,
+            "counter",
+            "Web Counter",
+            &COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()),
+        );
+
+        self.hframes.show(ctx, "iframe", "Iframe", IFRAME);
+        self.hframes.show(ctx, "video", "Video", VIDEO);
+        self.hframes.show(ctx, "yt", "YT", YT);
 
         self.hframes.sync(ctx);
     }
