@@ -36,24 +36,24 @@ use serde::Serialize;
 const TEST_URL: &str = "https://www.example.com/";
 
 macro_rules! iframe_style {
-    ($id:expr, $rect:expr, $interactable:expr, $visible:expr) => {
+    ($state:expr) => {
         format!(
             "border: none; position: absolute; top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; clip-path: url(#iframe-clip-{});",
-            $rect.min.y,
-            $rect.min.x,
-            $rect.width(),
-            $rect.height(),
-            if $interactable {
+            $state.rect.min.y,
+            $state.rect.min.x,
+            $state.rect.width(),
+            $state.rect.height(),
+            if $state.interactable {
                 ""
             } else {
                 "pointer-events: none;"
             },
-            if $visible {
+            if $state.visible {
                 ""
             } else {
                 "visibility: hidden;"
             },
-            $id
+            $state.id
         )
     };
 }
@@ -302,6 +302,6 @@ fn sync_iframe(state: &IframeWindowState) {
         body.append_child(&iframe).unwrap();
         iframe
     });
-    let style = iframe_style!(state.id, state.rect, state.interactable, state.visible);
+    let style = iframe_style!(state);
     element.set_attribute("style", &style).unwrap();
 }
