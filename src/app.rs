@@ -73,16 +73,16 @@ impl eframe::App for TemplateApp {
             })
         });
 
-        self.hframes.show(
+        self.hframes.show_window(
             ctx,
             "counter",
             "Web Counter",
             &COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()),
         );
 
-        self.hframes.show(ctx, "iframe", "Iframe", IFRAME);
-        self.hframes.show(ctx, "video", "Video", VIDEO);
-        self.hframes.show(ctx, "yt", "YT", YT);
+        self.hframes.show_window(ctx, "iframe", "Iframe", IFRAME);
+        self.hframes.show_window(ctx, "video", "Video", VIDEO);
+        self.hframes.show_window(ctx, "yt", "YT", YT);
 
         self.hframes.sync(ctx);
     }

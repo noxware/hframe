@@ -147,7 +147,7 @@ impl HframeRegistry {
         self.hframe_awares.insert(inner_response)
     }
 
-    pub fn show(&mut self, ctx: &egui::Context, id: &str, title: &str, content: &str) {
+    pub fn show_window(&mut self, ctx: &egui::Context, id: &str, title: &str, content: &str) {
         let state = self.hframes.iter_mut().find(|state| state.id == id);
         let state = match state {
             Some(state) => state,
