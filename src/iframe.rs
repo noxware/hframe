@@ -13,7 +13,7 @@ const MASK_TEMPLATE: &str = r#"
 "#;
 
 const HOLE_TEMPLATE: &str =
-    r#"<rect x="{x}" y="{y}" width="{width}" height="{height}" fill="black" />"#;
+    r#"<rect x="{x}" y="{y}" width="{width}" height="{height}" rx="5" fill="black" />"#;
 
 macro_rules! iframe_style {
         ($state:expr) => {
