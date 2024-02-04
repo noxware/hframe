@@ -115,6 +115,7 @@ impl IframeRegistry {
         self.compute_states(ctx);
         self.clip(ctx);
         self.sync();
+        self.clean();
     }
 
     fn compute_states(&mut self, ctx: &egui::Context) {
@@ -176,6 +177,20 @@ impl IframeRegistry {
         for state in &self.iframes {
             sync_iframe(state);
         }
+    }
+
+    fn clean(&mut self) {
+        for state in &self.iframes {
+            if !state.open {
+                let window = web_sys::window().unwrap();
+                let document = window.document().unwrap();
+                let element = document.get_element_by_id(&state.id).unwrap();
+                element.remove();
+                self.iframe_awares.0.remove(&egui::Id::new(&state.id));
+            }
+        }
+
+        self.iframes.retain(|state| state.open);
     }
 }
 
