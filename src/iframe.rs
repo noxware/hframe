@@ -64,7 +64,7 @@ impl IframeAwares {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct IframeWindowState {
     // All of these should be considered private.
     id: String,
@@ -112,6 +112,12 @@ impl IframeRegistry {
     }
 
     pub fn show(&mut self, ctx: &egui::Context) {
+        self.compute_states(ctx);
+        self.clip(ctx);
+        self.sync();
+    }
+
+    fn compute_states(&mut self, ctx: &egui::Context) {
         for state in &mut self.iframes {
             let shown_window = egui::Window::new(&state.title)
                 .id(egui::Id::new(&state.id))
@@ -136,12 +142,6 @@ impl IframeRegistry {
             } else {
                 state.visible = false;
             }
-        }
-
-        self.clip(ctx);
-
-        for state in &self.iframes {
-            sync_iframe(state);
         }
     }
 
@@ -170,6 +170,12 @@ impl IframeRegistry {
                 }
             }
         });
+    }
+
+    fn sync(&mut self) {
+        for state in &self.iframes {
+            sync_iframe(state);
+        }
     }
 }
 
