@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <svg
+      viewBox="0 0 500 500"
+      xmlns="http://www.w3.org/2000/svg"
+      style="position: absolute; width: 0; height: 0; overflow: hidden"
+    >
+      <defs>
+        <clipPath id="clip">
+          <path
+            fill-rule="evenodd"
+            stroke="red"
+            d="M50,0  h400 v100 h-400 z
+               M230,20 v50 h50 v-50 z
+               M100,20 v50 h50 v-50 z
+               "
+          />
+        </clipPath>
+      </defs>
+    </svg>
+    <div
+      style="
+        background-color: aqua;
+        width: 100%;
+        height: 600px;
+        clip-path: url(#clip);
+      "
+    >
+      afff
+    </div>
+  </body>
+</html>

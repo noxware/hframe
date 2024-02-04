@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body style="background-color: brown">
+    <svg
+      id="as-mask"
+      width="500"
+      height="500"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <mask id="mask" x="0" y="0" width="200" height="200">
+          <rect x="0" y="0" width="200" height="200" fill="white" />
+          <!-- Holes -->
+          <rect x="50" y="50" width="30" height="30" fill="black" />
+          <rect x="65" y="65" width="30" height="30" fill="black" />
+        </mask>
+      </defs>
+      <rect
+        x="0"
+        y="0"
+        width="200"
+        height="200"
+        fill="blue"
+        mask="url(#mask)"
+      />
+    </svg>
+    <div
+      id="to-mask"
+      style="background-color: aqua; width: 500px; height: 500px"
+    >
+      afff
+    </div>
+    <script>
+      const svg = document.getElementById("as-mask").outerHTML;
+      const div = document.getElementById("to-mask");
+      div.style.mask = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+      div.style.webkitMask = `url("data:image/svg+xml,${encodeURIComponent(
+        svg
+      )}")`;
+      div.style.maskMode = "luminance";
+      div.style.webkitMaskMode = "luminance";
+    </script>
+  </body>
+</html>
