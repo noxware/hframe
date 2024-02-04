@@ -24,7 +24,7 @@ macro_rules! eid {
 macro_rules! iframe_style {
         ($state:expr) => {
             format!(
-                "border: none; position: absolute; mask-mode: luminance; -webkit-mask-mode: luminance; top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; mask: url({}); -webkit-mask: url({});",
+                "top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; mask: url({}); -webkit-mask: url({});",
                 $state.rect.min.y,
                 $state.rect.min.x,
                 $state.rect.width(),
@@ -75,7 +75,7 @@ struct IframeWindowState {
     // All of these should be considered private.
     id: String,
     title: String,
-    src: String,
+    content: String,
     // Specially the following internal ones.
     open: bool,
     rect: egui::Rect,
@@ -85,11 +85,11 @@ struct IframeWindowState {
 }
 
 impl IframeWindowState {
-    fn new(id: &str, title: &str, src: &str) -> Self {
+    fn new(id: &str, title: &str, content: &str) -> Self {
         Self {
             id: id.to_string(),
             title: title.to_string(),
-            src: src.to_string(),
+            content: content.to_string(),
             rect: egui::Rect::ZERO,
             open: true,
             interactable: true,
@@ -99,13 +99,45 @@ impl IframeWindowState {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct IframeRegistry {
     iframes: Vec<IframeWindowState>,
     iframe_awares: IframeAwares,
 }
 
 impl IframeRegistry {
+    pub fn new() -> Self {
+        let style = web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .query_selector("#iframe-shared-styles")
+            .unwrap();
+
+        if style.is_none() {
+            let head = web_sys::window()
+                .unwrap()
+                .document()
+                .unwrap()
+                .head()
+                .unwrap();
+
+            head.insert_adjacent_html(
+                "beforeend",
+                &format!(
+                    "<style id=\"iframe-shared-styles\">{}</style>",
+                    include_str!("iframe.css")
+                ),
+            )
+            .unwrap();
+        }
+
+        Self {
+            iframes: Vec::new(),
+            iframe_awares: IframeAwares::default(),
+        }
+    }
+
     pub fn aware<R>(
         &mut self,
         inner_response: Option<egui::InnerResponse<R>>,
@@ -113,8 +145,9 @@ impl IframeRegistry {
         self.iframe_awares.insert(inner_response)
     }
 
-    pub fn insert(&mut self, id: &str, title: &str, src: &str) {
-        self.iframes.push(IframeWindowState::new(id, title, src));
+    pub fn insert(&mut self, id: &str, title: &str, content: &str) {
+        self.iframes
+            .push(IframeWindowState::new(id, title, content));
     }
 
     pub fn show(&mut self, ctx: &egui::Context) {
@@ -233,12 +266,13 @@ fn sync_iframe(state: &IframeWindowState) {
     let document = window.document().unwrap();
     let element = document.get_element_by_id(&state.id).unwrap_or_else(|| {
         let body = document.body().unwrap();
-        let iframe = document.create_element("iframe").unwrap();
+        let iframe = document.create_element("div").unwrap();
         iframe.set_attribute("id", &state.id).unwrap();
-        iframe.set_attribute("src", &state.src).unwrap();
+        iframe.set_inner_html(&state.content);
         body.append_child(&iframe).unwrap();
         iframe
     });
     let style = iframe_style!(state);
+    element.set_attribute("class", "iframe").unwrap();
     element.set_attribute("style", &style).unwrap();
 }
