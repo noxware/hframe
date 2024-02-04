@@ -35,7 +35,14 @@ pub struct TemplateApp {
 }
 
 impl TemplateApp {
-    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let style = egui::Style {
+            visuals: egui::Visuals::dark(),
+            ..Default::default()
+        };
+
+        cc.egui_ctx.set_style(style);
+
         Self {
             count: 0,
             hframes: HframeRegistry::new(),
