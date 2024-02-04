@@ -24,17 +24,13 @@ macro_rules! log {
 }
 
 pub struct TemplateApp {
-    hframe_id_counter: usize,
-    new_hframe_content: String,
     hframes: HframeRegistry,
 }
 
 impl TemplateApp {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         Self {
-            new_hframe_content: IFRAME_URL.to_string(),
             hframes: HframeRegistry::new(),
-            hframe_id_counter: 0,
         }
     }
 }
@@ -49,57 +45,8 @@ impl eframe::App for TemplateApp {
             })
         });
 
-        let devtools = egui::Window::new("Devtools").show(ctx, |ui| {
-            ui.vertical(|ui| {
-                ui.horizontal(|ui| {
-                    if ui.button("Spawn Iframe").clicked() {
-                        self.hframe_id_counter += 1;
-
-                        self.hframes.insert(
-                            &format!("iframe-{}", self.hframe_id_counter),
-                            &format!("Iframe {}", self.hframe_id_counter),
-                            IFRAME_URL,
-                        );
-                    }
-
-                    if ui.button("Spawn Video").clicked() {
-                        self.hframe_id_counter += 1;
-
-                        self.hframes.insert(
-                            &format!("video-{}", self.hframe_id_counter),
-                            &format!("Video {}", self.hframe_id_counter),
-                            VIDEO_URL,
-                        );
-                    }
-
-                    if ui.button("Spawn Youtube").clicked() {
-                        self.hframe_id_counter += 1;
-
-                        self.hframes.insert(
-                            &format!("yt-{}", self.hframe_id_counter),
-                            &format!("Youtube {}", self.hframe_id_counter),
-                            YT_URL,
-                        );
-                    }
-                });
-
-                ui.horizontal(|ui| {
-                    ui.label("Custom content:");
-                    ui.text_edit_multiline(&mut self.new_hframe_content);
-                    if ui.button("Add").clicked() {
-                        self.hframe_id_counter += 1;
-
-                        self.hframes.insert(
-                            &format!("custom-{}", self.hframe_id_counter),
-                            &format!("custom {}", self.hframe_id_counter),
-                            &self.new_hframe_content,
-                        );
-                    }
-                });
-            });
-        });
-
-        self.hframes.aware(devtools);
-        self.hframes.show(ctx);
+        self.hframes.show(ctx, "iframe", "Iframe", IFRAME_URL);
+        self.hframes.show(ctx, "video", "Video", VIDEO_URL);
+        self.hframes.show(ctx, "yt", "YT", YT_URL);
     }
 }

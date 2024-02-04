@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 const MASK_TEMPLATE: &str = r#"
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
@@ -103,6 +103,7 @@ impl HframeWindowState {
 pub struct HframeRegistry {
     hframes: Vec<HframeWindowState>,
     hframe_awares: HframeAwares,
+    shown_since_last_render: HashSet<String>,
 }
 
 impl HframeRegistry {
@@ -135,6 +136,7 @@ impl HframeRegistry {
         Self {
             hframes: Vec::new(),
             hframe_awares: HframeAwares::default(),
+            shown_since_last_render: HashSet::new(),
         }
     }
 
@@ -145,43 +147,55 @@ impl HframeRegistry {
         self.hframe_awares.insert(inner_response)
     }
 
-    pub fn insert(&mut self, id: &str, title: &str, content: &str) {
-        self.hframes
-            .push(HframeWindowState::new(id, title, content));
-    }
-
-    pub fn show(&mut self, ctx: &egui::Context) {
-        self.compute_states(ctx);
-        self.clip(ctx);
-        self.sync();
-        self.clean();
-    }
-
-    fn compute_states(&mut self, ctx: &egui::Context) {
-        for state in &mut self.hframes {
-            let shown_window = egui::Window::new(&state.title)
-                .id(eid!(&state.id))
-                .open(&mut state.open)
-                .show(ctx, |ui| {
-                    ui.centered_and_justified(|ui| {
-                        ui.label("");
-                    })
-                    .response
-                    .rect
-                });
-
-            let shown_window = self.hframe_awares.insert(shown_window);
-
-            if let Some(shown_window) = shown_window {
-                state.interactable = ctx
-                    .input(|i| !i.pointer.button_down(egui::PointerButton::Primary))
-                    && ctx.top_layer_id() == Some(shown_window.response.layer_id);
-                state.visible = shown_window.inner.is_some();
-                state.rect = shown_window.inner.unwrap_or(state.rect);
-            } else {
-                state.visible = false;
+    pub fn show(&mut self, ctx: &egui::Context, id: &str, title: &str, content: &str) {
+        let state = self.hframes.iter_mut().find(|state| state.id == id);
+        let state = match state {
+            Some(state) => state,
+            None => {
+                self.hframes
+                    .push(HframeWindowState::new(id, title, content));
+                self.hframes.last_mut().unwrap()
             }
+        };
+
+        state.title = title.to_string();
+        state.content = content.to_string();
+
+        let shown_window = egui::Window::new(&state.title)
+            .id(eid!(&state.id))
+            .open(&mut state.open)
+            .show(ctx, |ui| {
+                ui.centered_and_justified(|ui| {
+                    ui.label("");
+                })
+                .response
+                .rect
+            });
+
+        let shown_window = self.hframe_awares.insert(shown_window);
+
+        if let Some(shown_window) = shown_window {
+            state.interactable = ctx
+                .input(|i| !i.pointer.button_down(egui::PointerButton::Primary))
+                && ctx.top_layer_id() == Some(shown_window.response.layer_id);
+            state.visible = shown_window.inner.is_some();
+            state.rect = shown_window.inner.unwrap_or(state.rect);
+        } else {
+            state.visible = false;
         }
+        sync_hframe(state);
+
+        if !state.open {
+            let window = web_sys::window().unwrap();
+            let document = window.document().unwrap();
+            let element = document.get_element_by_id(&state.id).unwrap();
+            element.remove();
+            self.hframe_awares.0.remove(&eid!(&state.id));
+            self.hframes.retain(|state| state.id != id);
+        }
+
+        // TODO: Would be better if this happens before sync.
+        self.clip(ctx);
     }
 
     fn clip(&mut self, ctx: &egui::Context) {
@@ -209,26 +223,6 @@ impl HframeRegistry {
                 }
             }
         });
-    }
-
-    fn sync(&mut self) {
-        for state in &self.hframes {
-            sync_hframe(state);
-        }
-    }
-
-    fn clean(&mut self) {
-        for state in &self.hframes {
-            if !state.open {
-                let window = web_sys::window().unwrap();
-                let document = window.document().unwrap();
-                let element = document.get_element_by_id(&state.id).unwrap();
-                element.remove();
-                self.hframe_awares.0.remove(&eid!(&state.id));
-            }
-        }
-
-        self.hframes.retain(|state| state.open);
     }
 }
 
