@@ -161,8 +161,9 @@ impl IframeRegistry {
             let shown_window = self.iframe_awares.insert(shown_window);
 
             if let Some(shown_window) = shown_window {
-                state.interactable =
-                    ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary));
+                state.interactable = ctx
+                    .input(|i| !i.pointer.button_down(egui::PointerButton::Primary))
+                    && ctx.top_layer_id() == Some(shown_window.response.layer_id);
                 state.visible = shown_window.inner.is_some();
                 state.rect = shown_window.inner.unwrap_or(state.rect);
                 sync_iframe(state);
