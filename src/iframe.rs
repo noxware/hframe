@@ -15,6 +15,12 @@ const MASK_TEMPLATE: &str = r#"
 const HOLE_TEMPLATE: &str =
     r#"<rect x="{x}" y="{y}" width="{width}" height="{height}" rx="5" fill="black" />"#;
 
+macro_rules! eid {
+    ($id:expr) => {
+        egui::Id::new($id)
+    };
+}
+
 macro_rules! iframe_style {
         ($state:expr) => {
             format!(
@@ -121,7 +127,7 @@ impl IframeRegistry {
     fn compute_states(&mut self, ctx: &egui::Context) {
         for state in &mut self.iframes {
             let shown_window = egui::Window::new(&state.title)
-                .id(egui::Id::new(&state.id))
+                .id(eid!(&state.id))
                 .open(&mut state.open)
                 .show(ctx, |ui| {
                     ui.centered_and_justified(|ui| {
@@ -164,7 +170,7 @@ impl IframeRegistry {
                 if let Some(iframe) = self
                     .iframes
                     .iter_mut()
-                    .find(|iframe| egui::Id::new(&iframe.id) == *id)
+                    .find(|iframe| eid!(&iframe.id) == *id)
                 {
                     let prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
                     iframe.mask = build_mask_uri(iframe.rect, prev_rects);
@@ -186,7 +192,7 @@ impl IframeRegistry {
                 let document = window.document().unwrap();
                 let element = document.get_element_by_id(&state.id).unwrap();
                 element.remove();
-                self.iframe_awares.0.remove(&egui::Id::new(&state.id));
+                self.iframe_awares.0.remove(&eid!(&state.id));
             }
         }
 
