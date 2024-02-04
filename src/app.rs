@@ -197,13 +197,11 @@ impl IframeRegistry {
                     .iter()
                     .find(|iframe| egui::Id::new(&iframe.id) == *id)
                 {
-                    log!("running");
-                    clip_pathes.push_str(&format!("<clipPath id=\"iframe-clip-{}\">", iframe.id));
-
+                    let mut rects = String::new();
                     let prev = &sorted_awares[0..index];
                     for (_id, rect) in prev {
                         let relative = rect_to_relative(*rect, iframe.rect);
-                        clip_pathes.push_str(&format!(
+                        rects.push_str(&format!(
                             "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" />",
                             relative.min.x,
                             relative.min.y,
@@ -211,7 +209,11 @@ impl IframeRegistry {
                             relative.height()
                         ));
                     }
-                    clip_pathes.push_str("</clipPath>");
+
+                    clip_pathes.push_str(&format!(
+                        "<clipPath id=\"iframe-clip-{}\">{}</clipPath>",
+                        iframe.id, rects
+                    ));
                 }
             }
 
