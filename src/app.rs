@@ -258,8 +258,6 @@ impl eframe::App for TemplateApp {
 
         self.iframes.aware(devtools);
         self.iframes.show(ctx);
-
-        log!("{}", serde_json::to_string_pretty(&self.iframes).unwrap());
     }
 }
 

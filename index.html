@@ -130,20 +130,6 @@
     <!-- the id is hardcoded in main.rs . so, make sure both match. -->
     <canvas id="the_canvas_id"></canvas>
 
-    <svg
-      version="1.1"
-      xmlns="http://www.w3.org/2000/svg"
-      xmlns:xlink="http://www.w3.org/1999/xlink"
-      style="position: absolute; width: 0; height: 0; overflow: hidden"
-    >
-      <defs id="iframe-clip-defs">
-        <clipPath id="iframe-clip">
-          <rect x="0" y="0" width="200" height="100" />
-          <rect x="300" y="300" width="200" height="100" />
-        </clipPath>
-      </defs>
-    </svg>
-
     <!--Register Service Worker. this will cache the wasm / js scripts for offline use (for PWA functionality). -->
     <!-- Force refresh (Ctrl + F5) to load the latest files instead of cached files  -->
     <script>
