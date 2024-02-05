@@ -90,25 +90,28 @@ impl eframe::App for TemplateApp {
             })
         });
 
-        hframe::Window::new(
-            "counter",
-            "Web Counter",
-            &COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()),
-        )
-        .open(&mut self.counter_open)
-        .show(&mut self.hframes, ctx);
+        self.hframes
+            .window(
+                "counter",
+                "Web Counter",
+                &COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()),
+            )
+            .open(&mut self.counter_open)
+            .show(ctx);
 
-        hframe::Window::new("iframe", "Iframe", IFRAME)
+        self.hframes
+            .window("iframe", "Iframe", IFRAME)
             .open(&mut self.iframe_open)
-            .show(&mut self.hframes, ctx);
+            .show(ctx);
 
         if self.video_open {
-            hframe::Window::new("video", "Video", VIDEO).show(&mut self.hframes, ctx);
+            self.hframes.window("video", "Video", VIDEO).show(ctx);
         }
 
-        hframe::Window::new("yt", "YT", YT)
+        self.hframes
+            .window("yt", "YT", YT)
             .open(&mut self.yt_open)
-            .show(&mut self.hframes, ctx);
+            .show(ctx);
 
         self.hframes.sync(ctx);
     }

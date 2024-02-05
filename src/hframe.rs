@@ -99,34 +99,27 @@ impl HframeWindowState {
     }
 }
 
-pub struct Window<'open> {
+pub struct Window<'open, 'reg> {
     id: String,
     title: String,
     content: String,
     open: Option<&'open mut bool>,
+    registry: &'reg mut Registry,
 }
 
-impl<'open> Window<'open> {
-    pub fn new(id: &str, title: &str, content: &str) -> Self {
-        Self {
-            id: id.to_string(),
-            title: title.to_string(),
-            content: content.to_string(),
-            open: None,
-        }
-    }
-
+impl<'open, 'reg> Window<'open, 'reg> {
     pub fn open(mut self, open: &'open mut bool) -> Self {
         self.open = Some(open);
         self
     }
 
-    pub fn show(self, registry: &mut Registry, ctx: &egui::Context) {
+    pub fn show(self, ctx: &egui::Context) {
         let Self {
             id,
             title,
             content,
             open,
+            registry,
         } = self;
 
         let open = if let Some(open) = open {
@@ -232,6 +225,16 @@ impl Registry {
             hframes: Vec::new(),
             hframe_awares: HframeAwares::default(),
             hframes_since_last_sync: HashSet::new(),
+        }
+    }
+
+    pub fn window<'reg>(&'reg mut self, id: &str, title: &str, content: &str) -> Window<'_, 'reg> {
+        Window {
+            id: id.to_string(),
+            title: title.to_string(),
+            content: content.to_string(),
+            open: None,
+            registry: self,
         }
     }
 
