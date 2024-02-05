@@ -1,4 +1,4 @@
-use crate::hframe::HframeRegistry;
+use crate::hframe;
 
 const IFRAME: &str = r#"
 <iframe src="https://www.example.com/"></iframe>
@@ -29,10 +29,14 @@ macro_rules! log {
     }
 }
 
+#[derive(Default)]
 pub struct TemplateApp {
+    counter_open: bool,
+    iframe_open: bool,
+    yt_open: bool,
     count: i32,
     video_open: bool,
-    hframes: HframeRegistry,
+    hframes: hframe::Registry,
 }
 
 impl TemplateApp {
@@ -45,9 +49,11 @@ impl TemplateApp {
         cc.egui_ctx.set_style(style);
 
         Self {
-            count: 0,
             video_open: true,
-            hframes: HframeRegistry::new(),
+            counter_open: true,
+            iframe_open: true,
+            yt_open: true,
+            ..Default::default()
         }
     }
 }
@@ -84,20 +90,25 @@ impl eframe::App for TemplateApp {
             })
         });
 
-        self.hframes.show_window(
-            ctx,
+        hframe::Window::new(
             "counter",
             "Web Counter",
             &COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()),
-        );
+        )
+        .open(&mut self.counter_open)
+        .show(&mut self.hframes, ctx);
 
-        self.hframes.show_window(ctx, "iframe", "Iframe", IFRAME);
+        hframe::Window::new("iframe", "Iframe", IFRAME)
+            .open(&mut self.iframe_open)
+            .show(&mut self.hframes, ctx);
 
         if self.video_open {
-            self.hframes.show_window(ctx, "video", "Video", VIDEO);
+            hframe::Window::new("video", "Video", VIDEO).show(&mut self.hframes, ctx);
         }
 
-        self.hframes.show_window(ctx, "yt", "YT", YT);
+        hframe::Window::new("yt", "YT", YT)
+            .open(&mut self.yt_open)
+            .show(&mut self.hframes, ctx);
 
         self.hframes.sync(ctx);
     }
