@@ -1,3 +1,4 @@
+use crate::geometry::disjoint_rects;
 use std::collections::{HashMap, HashSet};
 
 macro_rules! eid {
@@ -295,22 +296,10 @@ fn build_clip_path<H: IntoIterator<Item = egui::Rect>>(parent: egui::Rect, holes
         .collect::<Vec<_>>();
     let parent = rect_to_relative(parent, parent);
 
-    let mut holes_with_joins: Vec<egui::Rect> = Vec::new();
-    for hole in &holes {
-        holes_with_joins.push(*hole);
-        for other_hole in &holes {
-            if *hole == *other_hole {
-                continue;
-            }
-
-            if hole.intersects(*other_hole) {
-                holes_with_joins.push(hole.intersect(*other_hole));
-            }
-        }
-    }
+    let holes = disjoint_rects(&holes);
 
     let parent_path = rect_to_path(&parent, false);
-    let holes_path = holes_with_joins
+    let holes_path = holes
         .iter()
         .map(|hole| rect_to_path(hole, true))
         .collect::<Vec<_>>()
