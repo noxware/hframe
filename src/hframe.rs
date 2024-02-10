@@ -1,20 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-const MASK_TEMPLATE: &str = r#"
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
-  <defs>
-    <mask id="mask" x="0" y="0" width="{width}" height="{height}">
-      <rect x="0" y="0" width="{width}" height="{height}" fill="white" />
-      {holes}      
-    </mask>
-  </defs>
-  <rect x="0" y="0" width="{width}" height="{height}" fill="blue" mask="url(#mask)" />
-</svg>
-"#;
-
-const HOLE_TEMPLATE: &str =
-    r#"<rect x="{x}" y="{y}" width="{width}" height="{height}" rx="5" fill="black" />"#;
-
 macro_rules! eid {
     ($id:expr) => {
         egui::Id::new($id)
@@ -22,28 +7,27 @@ macro_rules! eid {
 }
 
 macro_rules! hframe_style {
-        ($state:expr) => {
-            format!(
-                "top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; mask: url({}); -webkit-mask: url({});",
-                $state.rect.min.y,
-                $state.rect.min.x,
-                $state.rect.width(),
-                $state.rect.height(),
-                if $state.interactable {
-                    ""
-                } else {
-                    "pointer-events: none;"
-                },
-                if $state.visible {
-                    ""
-                } else {
-                    "visibility: hidden;"
-                },
-                $state.mask,
-                $state.mask
-            )
-        };
-    }
+    ($state:expr) => {
+        format!(
+            "top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; clip-path: {};",
+            $state.rect.min.y,
+            $state.rect.min.x,
+            $state.rect.width(),
+            $state.rect.height(),
+            if $state.interactable {
+                ""
+            } else {
+                "pointer-events: none;"
+            },
+            if $state.visible {
+                ""
+            } else {
+                "visibility: hidden;"
+            },
+            $state.clip
+        )
+    };
+}
 
 #[derive(Debug)]
 struct HframeAware {
@@ -80,7 +64,7 @@ struct HframeWindowState {
     rect: egui::Rect,
     interactable: bool,
     visible: bool,
-    mask: String,
+    clip: String,
     content_changed: bool,
 }
 
@@ -93,7 +77,7 @@ impl HframeWindowState {
             rect: egui::Rect::ZERO,
             interactable: true,
             visible: true,
-            mask: build_mask_uri(egui::Rect::ZERO, std::iter::empty()),
+            clip: build_clip_path(egui::Rect::ZERO, std::iter::empty()),
             content_changed: false,
         }
     }
@@ -266,7 +250,7 @@ impl Registry {
                     .find(|hframe| eid!(&hframe.id) == *id)
                 {
                     let prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
-                    hframe.mask = build_mask_uri(hframe.rect, prev_rects);
+                    hframe.clip = build_clip_path(hframe.rect, prev_rects);
                 }
             }
         });
@@ -304,26 +288,57 @@ fn rect_to_relative(rect: egui::Rect, parent: egui::Rect) -> egui::Rect {
     egui::Rect::from_min_max(min.to_pos2(), max.to_pos2())
 }
 
-fn build_mask_uri<H: Iterator<Item = egui::Rect>>(parent: egui::Rect, holes: H) -> String {
-    let holes = holes.map(|hole| rect_to_relative(hole, parent));
+fn build_clip_path<H: IntoIterator<Item = egui::Rect>>(parent: egui::Rect, holes: H) -> String {
+    let holes = holes
+        .into_iter()
+        .map(|hole| rect_to_relative(hole, parent))
+        .collect::<Vec<_>>();
     let parent = rect_to_relative(parent, parent);
 
-    let holes = holes
-        .map(|hole| {
-            HOLE_TEMPLATE
-                .replace("{x}", &hole.min.x.to_string())
-                .replace("{y}", &hole.min.y.to_string())
-                .replace("{width}", &hole.width().to_string())
-                .replace("{height}", &hole.height().to_string())
-        })
-        .collect::<String>();
+    let mut holes_with_joins: Vec<egui::Rect> = Vec::new();
+    for hole in &holes {
+        holes_with_joins.push(*hole);
+        for other_hole in &holes {
+            if *hole == *other_hole {
+                continue;
+            }
 
-    let svg = MASK_TEMPLATE
-        .replace("{width}", &parent.width().to_string())
-        .replace("{height}", &parent.height().to_string())
-        .replace("{holes}", &holes);
+            if hole.intersects(*other_hole) {
+                holes_with_joins.push(hole.intersect(*other_hole));
+            }
+        }
+    }
 
-    format!("data:image/svg+xml,{}", urlencoding::encode(&svg))
+    let parent_path = rect_to_path(&parent, false);
+    let holes_path = holes_with_joins
+        .iter()
+        .map(|hole| rect_to_path(hole, true))
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    format!("path(evenodd,\"{} {}\")", parent_path, holes_path)
+}
+
+fn rect_to_path(rect: &egui::Rect, dt: bool) -> String {
+    if !dt {
+        format!(
+            "M{},{}  h{} v{} h{} z",
+            rect.min.x,
+            rect.min.y,
+            rect.width(),
+            rect.height(),
+            -rect.width()
+        )
+    } else {
+        format!(
+            "M{},{}  v{} h{} v{} z",
+            rect.min.x,
+            rect.min.y,
+            rect.height(),
+            rect.width(),
+            -rect.height()
+        )
+    }
 }
 
 fn sync_hframe(state: &HframeWindowState) {
