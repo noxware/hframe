@@ -1,4 +1,6 @@
-use crate::geometry::disjoint_rects;
+use crate::geometry::{
+    egui_rect_to_geo_rect, polygon_to_svg_path_counter_clockwise, rects_to_union_polygons,
+};
 use std::collections::{HashMap, HashSet};
 
 macro_rules! eid {
@@ -292,42 +294,21 @@ fn rect_to_relative(rect: egui::Rect, parent: egui::Rect) -> egui::Rect {
 fn build_clip_path<H: IntoIterator<Item = egui::Rect>>(parent: egui::Rect, holes: H) -> String {
     let holes = holes
         .into_iter()
-        .map(|hole| rect_to_relative(hole, parent))
+        .map(|hole| egui_rect_to_geo_rect(rect_to_relative(hole, parent)))
         .collect::<Vec<_>>();
-    let parent = rect_to_relative(parent, parent);
+    let parent = egui_rect_to_geo_rect(rect_to_relative(parent, parent));
 
-    let holes = disjoint_rects(&holes);
+    let parent = parent.to_polygon();
+    let holes = rects_to_union_polygons(&holes);
 
-    let parent_path = rect_to_path(&parent, false);
+    let parent_path = polygon_to_svg_path_counter_clockwise(&parent);
     let holes_path = holes
         .iter()
-        .map(|hole| rect_to_path(hole, true))
+        .map(|hole| polygon_to_svg_path_counter_clockwise(hole))
         .collect::<Vec<_>>()
         .join(" ");
 
     format!("path(evenodd,\"{} {}\")", parent_path, holes_path)
-}
-
-fn rect_to_path(rect: &egui::Rect, dt: bool) -> String {
-    if !dt {
-        format!(
-            "M{},{}  h{} v{} h{} z",
-            rect.min.x,
-            rect.min.y,
-            rect.width(),
-            rect.height(),
-            -rect.width()
-        )
-    } else {
-        format!(
-            "M{},{}  v{} h{} v{} z",
-            rect.min.x,
-            rect.min.y,
-            rect.height(),
-            rect.width(),
-            -rect.height()
-        )
-    }
 }
 
 fn sync_hframe(state: &HframeWindowState) {
