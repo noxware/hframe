@@ -1,14 +1,13 @@
 use std::collections::{HashMap, HashSet};
 
 const MASK_TEMPLATE: &str = r#"
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
+<svg id="{id}-svg" class="hframe-mask-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
   <defs>
-    <mask id="mask" x="0" y="0" width="{width}" height="{height}">
+    <mask id="{id}-mask" x="0" y="0" width="{width}" height="{height}">
       <rect x="0" y="0" width="{width}" height="{height}" fill="white" />
       {holes}      
     </mask>
   </defs>
-  <rect x="0" y="0" width="{width}" height="{height}" fill="blue" mask="url(#mask)" />
 </svg>
 "#;
 
@@ -22,28 +21,27 @@ macro_rules! eid {
 }
 
 macro_rules! hframe_style {
-        ($state:expr) => {
-            format!(
-                "top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; mask: url({}); -webkit-mask: url({});",
-                $state.rect.min.y,
-                $state.rect.min.x,
-                $state.rect.width(),
-                $state.rect.height(),
-                if $state.interactable {
-                    ""
-                } else {
-                    "pointer-events: none;"
-                },
-                if $state.visible {
-                    ""
-                } else {
-                    "visibility: hidden;"
-                },
-                $state.mask,
-                $state.mask
-            )
-        };
-    }
+    ($state:expr) => {
+        format!(
+            "top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; mask: url(#{});",
+            $state.rect.min.y,
+            $state.rect.min.x,
+            $state.rect.width(),
+            $state.rect.height(),
+            if $state.interactable {
+                ""
+            } else {
+                "pointer-events: none;"
+            },
+            if $state.visible {
+                ""
+            } else {
+                "visibility: hidden;"
+            },
+            format!("{}-mask", $state.id)
+        )
+    };
+}
 
 #[derive(Debug)]
 struct HframeAware {
@@ -86,16 +84,18 @@ struct HframeWindowState {
 
 impl HframeWindowState {
     fn new(id: &str, title: &str, content: &str) -> Self {
-        Self {
+        let mut res = Self {
             id: id.to_string(),
             title: title.to_string(),
             content: content.to_string(),
             rect: egui::Rect::ZERO,
             interactable: true,
             visible: true,
-            mask: build_mask_uri(egui::Rect::ZERO, std::iter::empty()),
+            mask: "".into(),
             content_changed: false,
-        }
+        };
+        res.mask = build_mask_svg(&res, std::iter::empty());
+        res
     }
 }
 
@@ -266,7 +266,7 @@ impl Registry {
                     .find(|hframe| eid!(&hframe.id) == *id)
                 {
                     let prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
-                    hframe.mask = build_mask_uri(hframe.rect, prev_rects);
+                    hframe.mask = build_mask_svg(&hframe, prev_rects);
                 }
             }
         });
@@ -304,7 +304,8 @@ fn rect_to_relative(rect: egui::Rect, parent: egui::Rect) -> egui::Rect {
     egui::Rect::from_min_max(min.to_pos2(), max.to_pos2())
 }
 
-fn build_mask_uri<H: Iterator<Item = egui::Rect>>(parent: egui::Rect, holes: H) -> String {
+fn build_mask_svg<H: Iterator<Item = egui::Rect>>(hframe: &HframeWindowState, holes: H) -> String {
+    let parent = hframe.rect;
     let holes = holes.map(|hole| rect_to_relative(hole, parent));
     let parent = rect_to_relative(parent, parent);
 
@@ -318,17 +319,18 @@ fn build_mask_uri<H: Iterator<Item = egui::Rect>>(parent: egui::Rect, holes: H) 
         })
         .collect::<String>();
 
-    let svg = MASK_TEMPLATE
+    MASK_TEMPLATE
+        .replace("{id}", &hframe.id)
         .replace("{width}", &parent.width().to_string())
         .replace("{height}", &parent.height().to_string())
-        .replace("{holes}", &holes);
-
-    format!("data:image/svg+xml,{}", urlencoding::encode(&svg))
+        .replace("{holes}", &holes)
 }
 
 fn sync_hframe(state: &HframeWindowState) {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
+    let body = document.body().unwrap();
+
     let element = document.get_element_by_id(&state.id).unwrap_or_else(|| {
         let body = document.body().unwrap();
         let hframe = document.create_element("div").unwrap();
@@ -341,6 +343,16 @@ fn sync_hframe(state: &HframeWindowState) {
     if state.content_changed {
         element.set_inner_html(&state.content);
     }
+
+    let svg = document
+        .get_element_by_id(&format!("{}-svg", state.id))
+        .unwrap_or_else(|| {
+            let svg = document.create_element("svg").unwrap();
+            body.append_child(&svg).unwrap();
+            svg
+        });
+
+    svg.set_outer_html(&state.mask);
 
     let style = hframe_style!(state);
     element.set_attribute("class", "hframe").unwrap();
