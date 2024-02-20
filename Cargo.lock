@@ -871,21 +871,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui-hframe"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "egui",
- "env_logger",
- "log",
- "serde",
- "serde_json",
- "urlencoding",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
 name = "egui-winit"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1338,6 +1323,21 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
+name = "hframe"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "env_logger",
+ "log",
+ "serde",
+ "serde_json",
+ "urlencoding",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
 
 [[package]]
 name = "home"

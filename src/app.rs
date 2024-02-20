@@ -1,5 +1,3 @@
-use crate::hframe;
-
 const IFRAME: &str = r#"
 <iframe src="https://www.example.com/"></iframe>
 "#;
@@ -30,7 +28,7 @@ macro_rules! log {
 }
 
 #[derive(Default)]
-pub struct TemplateApp {
+pub struct App {
     counter_open: bool,
     iframe_open: bool,
     yt_open: bool,
@@ -39,7 +37,7 @@ pub struct TemplateApp {
     hframes: hframe::Registry,
 }
 
-impl TemplateApp {
+impl App {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let style = egui::Style {
             visuals: egui::Visuals::dark(),
@@ -58,7 +56,7 @@ impl TemplateApp {
     }
 }
 
-impl eframe::App for TemplateApp {
+impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.hframes.aware({
             egui::Window::new("None").show(ctx, |ui| {
