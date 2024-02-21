@@ -1,14 +1,16 @@
 use crate::aware::Awares;
-use crate::utils::{build_mask_svg, eid, sync_hframe};
+use crate::mask_strategies;
+use crate::mask_strategy::MaskStrategy;
+use crate::utils::{eid, sync_hframe};
 use crate::window::Window;
 use crate::window_state::WindowState;
 use std::collections::HashSet;
 
-#[derive(Debug)]
 pub struct Registry {
     pub(crate) hframes: Vec<WindowState>,
     pub(crate) hframe_awares: Awares,
     pub(crate) hframes_since_last_sync: HashSet<String>,
+    mask_strategy: Box<dyn MaskStrategy>,
 }
 
 impl Default for Registry {
@@ -48,6 +50,7 @@ impl Registry {
             hframes: Vec::new(),
             hframe_awares: Awares::default(),
             hframes_since_last_sync: HashSet::new(),
+            mask_strategy: Box::new(mask_strategies::Auto::new()),
         }
     }
 
@@ -88,8 +91,8 @@ impl Registry {
                     .iter_mut()
                     .find(|hframe| eid!(&hframe.id) == *id)
                 {
-                    let prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
-                    hframe.mask = build_mask_svg(&hframe, prev_rects);
+                    let mut prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
+                    hframe.mask = self.mask_strategy.compute_mask(&hframe, &mut prev_rects);
                 }
             }
         });
@@ -98,7 +101,7 @@ impl Registry {
     pub fn sync(&mut self, ctx: &egui::Context) {
         self.clip(ctx);
         for state in &self.hframes {
-            sync_hframe(state);
+            sync_hframe(state, &*self.mask_strategy);
         }
         self.clean();
     }
@@ -118,5 +121,11 @@ impl Registry {
         });
 
         self.hframes_since_last_sync.clear();
+    }
+
+    pub fn set_mask_strategy<M: MaskStrategy + 'static>(&mut self, mask_strategy: M) {
+        self.mask_strategy.cleanup();
+        self.mask_strategy = Box::new(mask_strategy);
+        self.mask_strategy.setup();
     }
 }
