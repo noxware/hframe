@@ -160,11 +160,11 @@ pub fn mask_strategy_meta(ctx: &egui::Context) -> MaskStrategyMeta {
     reg.mask_strategy_meta()
 }
 
-pub trait Awarable {
+pub trait Aware {
     fn aware(self) -> Self;
 }
 
-impl<R> Awarable for Option<egui::InnerResponse<R>> {
+impl<R> Aware for Option<egui::InnerResponse<R>> {
     fn aware(self) -> Self {
         aware(self)
     }

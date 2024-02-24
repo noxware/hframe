@@ -1,4 +1,4 @@
-use hframe::Awarable;
+use hframe::Aware;
 
 const IFRAME: &str = r#"
 <iframe src="https://www.example.com/"></iframe>
