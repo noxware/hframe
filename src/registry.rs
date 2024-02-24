@@ -139,13 +139,13 @@ pub(crate) fn get_or_insert_registry(ctx: &egui::Context) -> EguiCheap<Registry>
     )
 }
 
-pub fn aware<R>(
-    ctx: &egui::Context,
-    inner_response: Option<egui::InnerResponse<R>>,
-) -> Option<egui::InnerResponse<R>> {
+pub fn aware<R>(inner_response: Option<egui::InnerResponse<R>>) -> Option<egui::InnerResponse<R>> {
+    let inner_response = inner_response?;
+    let ctx = &inner_response.response.ctx;
+
     let reg = get_or_insert_registry(ctx);
     let mut reg = reg.lock().unwrap();
-    reg.aware(inner_response)
+    reg.aware(Some(inner_response))
 }
 
 pub fn sync(ctx: &egui::Context) {
@@ -158,4 +158,14 @@ pub fn mask_strategy_meta(ctx: &egui::Context) -> MaskStrategyMeta {
     let reg = get_or_insert_registry(ctx);
     let reg = reg.lock().unwrap();
     reg.mask_strategy_meta()
+}
+
+pub trait Awarable {
+    fn aware(self) -> Self;
+}
+
+impl<R> Awarable for Option<egui::InnerResponse<R>> {
+    fn aware(self) -> Self {
+        aware(self)
+    }
 }

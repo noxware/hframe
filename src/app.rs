@@ -1,3 +1,5 @@
+use hframe::Awarable;
+
 const IFRAME: &str = r#"
 <iframe src="https://www.example.com/"></iframe>
 "#;
@@ -57,16 +59,16 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        hframe::aware(ctx, {
-            egui::Window::new("None").show(ctx, |ui| {
+        egui::Window::new("None")
+            .show(ctx, |ui| {
                 ui.centered_and_justified(|ui| {
                     ui.label("Empty");
                 });
             })
-        });
+            .aware();
 
-        hframe::aware(ctx, {
-            egui::Window::new("Devtools").show(ctx, |ui| {
+        egui::Window::new("Devtools")
+            .show(ctx, |ui| {
                 ui.label(format!(
                     "Mask Strategy: {}",
                     hframe::mask_strategy_meta(ctx).name
@@ -89,7 +91,7 @@ impl eframe::App for App {
                     }
                 });
             })
-        });
+            .aware();
 
         hframe::HtmlWindow::new("Web Counter")
             .content(&COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()))
