@@ -1,5 +1,3 @@
-#![warn(clippy::all, rust_2018_idioms)]
-
 mod app;
 
 #[cfg(not(target_arch = "wasm32"))]

@@ -1,0 +1,24 @@
+[package]
+name = "hframe-demo"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.73"
+
+
+[dependencies]
+hframe = { path = "../.." }
+egui = "0.25.0"
+eframe = { version = "0.25.0", default-features = false, features = [
+    "accesskit",
+    "default_fonts",
+    "glow",
+] }
+log = "0.4"
+wasm-bindgen-futures = "0.4"
+
+
+[profile.release]
+opt-level = 2
+
+[profile.dev.package."*"]
+opt-level = 2
