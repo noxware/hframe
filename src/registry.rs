@@ -160,6 +160,12 @@ pub fn mask_strategy_meta(ctx: &egui::Context) -> MaskStrategyMeta {
     reg.mask_strategy_meta()
 }
 
+pub fn set_mask_strategy<M: MaskStrategy + 'static>(ctx: &egui::Context, mask_strategy: M) {
+    let reg = get_or_insert_registry(ctx);
+    let mut reg = reg.lock().unwrap();
+    reg.set_mask_strategy(mask_strategy);
+}
+
 pub trait Aware {
     fn aware(self) -> Self;
 }
