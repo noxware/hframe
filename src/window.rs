@@ -8,17 +8,27 @@ pub struct Window<'open> {
 }
 
 impl<'open> Window<'open> {
-    pub fn new(id: &str, title: &str, content: &str) -> Self {
+    pub fn new(title: &str) -> Self {
         Self {
-            id: id.to_string(),
+            id: title.to_lowercase().replace(' ', "-"),
             title: title.to_string(),
-            content: content.to_string(),
+            content: "".into(),
             open: None,
         }
     }
 
     pub fn open(mut self, open: &'open mut bool) -> Self {
         self.open = Some(open);
+        self
+    }
+
+    pub fn id(mut self, id: &str) -> Self {
+        self.id = id.to_string();
+        self
+    }
+
+    pub fn content(mut self, content: &str) -> Self {
+        self.content = content.to_string();
         self
     }
 

@@ -91,23 +91,22 @@ impl eframe::App for App {
             })
         });
 
-        hframe::Window::new(
-            "counter",
-            "Web Counter",
-            &COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()),
-        )
-        .open(&mut self.counter_open)
-        .show(ctx);
+        hframe::Window::new("Web Counter")
+            .content(&COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()))
+            .open(&mut self.counter_open)
+            .show(ctx);
 
-        hframe::Window::new("iframe", "Iframe", IFRAME)
+        hframe::Window::new("Iframe")
+            .content(IFRAME)
             .open(&mut self.iframe_open)
             .show(ctx);
 
         if self.video_open {
-            hframe::Window::new("video", "Video", VIDEO).show(ctx);
+            hframe::Window::new("Video").content(VIDEO).show(ctx);
         }
 
-        hframe::Window::new("yt", "YT", YT)
+        hframe::Window::new("YT")
+            .content(YT)
             .open(&mut self.yt_open)
             .show(ctx);
 
