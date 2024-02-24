@@ -1,5 +1,4 @@
-use crate::mask_strategy::MaskStrategy;
-use crate::window_state::WindowState;
+use crate::{MaskStrategy, WindowState};
 
 macro_rules! eid {
     ($id:expr) => {

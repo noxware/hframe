@@ -1,9 +1,7 @@
 use crate::aware::Awares;
 use crate::mask_strategies;
-use crate::mask_strategy::{MaskStrategy, MaskStrategyMeta};
 use crate::utils::{eid, sync_hframe};
-use crate::window::Window;
-use crate::window_state::WindowState;
+use crate::{MaskStrategy, MaskStrategyMeta, Window, WindowState};
 use std::collections::HashSet;
 
 pub struct Registry {

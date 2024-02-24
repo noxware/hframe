@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use crate::window_state::WindowState;
+use crate::WindowState;
 
 #[derive(Clone, Debug)]
 pub struct MaskStrategyMeta {

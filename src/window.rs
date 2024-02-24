@@ -1,4 +1,4 @@
-use crate::{registry::Registry, utils::eid, window_state::WindowState};
+use crate::{utils::eid, Registry, WindowState};
 
 pub struct Window<'open, 'reg> {
     pub(crate) id: String,
