@@ -1,5 +1,8 @@
 use crate::utils::rect_to_relative;
-use crate::{mask_strategy::MaskStrategy, window_state::WindowState};
+use crate::{
+    mask_strategy::{MaskStrategy, MaskStrategyMeta},
+    window_state::WindowState,
+};
 use std::any::Any;
 
 pub const MASK_TEMPLATE: &str = r#"
@@ -48,6 +51,12 @@ impl DocumentMask {
 }
 
 impl MaskStrategy for DocumentMask {
+    fn meta(&self) -> MaskStrategyMeta {
+        MaskStrategyMeta {
+            name: "document_mask".into(),
+        }
+    }
+
     fn setup(&self) {}
 
     fn cleanup(&self) {

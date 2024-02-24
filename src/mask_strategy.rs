@@ -2,6 +2,11 @@ use std::any::Any;
 
 use crate::window_state::WindowState;
 
+#[derive(Clone, Debug)]
+pub struct MaskStrategyMeta {
+    pub name: String,
+}
+
 pub trait MaskStrategy {
     fn setup(&self);
     fn cleanup(&self);
@@ -11,4 +16,5 @@ pub trait MaskStrategy {
         prev_rects: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any>>;
     fn mask(&self, state: &WindowState);
+    fn meta(&self) -> MaskStrategyMeta;
 }

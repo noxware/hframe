@@ -1,5 +1,8 @@
 use super::DocumentMask;
-use crate::{mask_strategy::MaskStrategy, window_state::WindowState};
+use crate::{
+    mask_strategy::{MaskStrategy, MaskStrategyMeta},
+    window_state::WindowState,
+};
 use std::any::Any;
 
 pub struct Auto {
@@ -15,6 +18,12 @@ impl Auto {
 }
 
 impl MaskStrategy for Auto {
+    fn meta(&self) -> MaskStrategyMeta {
+        let mut m = self.inner.meta();
+        m.name = format!("{} (auto)", m.name);
+        m
+    }
+
     fn setup(&self) {
         self.inner.setup();
     }

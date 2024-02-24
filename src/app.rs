@@ -68,6 +68,10 @@ impl eframe::App for App {
 
         self.hframes.aware({
             egui::Window::new("Devtools").show(ctx, |ui| {
+                ui.label(format!(
+                    "Mask Strategy: {}",
+                    self.hframes.mask_strategy_meta().name
+                ));
                 let video_toggle_text = if self.video_open {
                     "Force close video"
                 } else {
