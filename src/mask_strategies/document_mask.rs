@@ -67,7 +67,7 @@ impl MaskStrategy for DocumentMask {
         &self,
         hframe: &WindowState,
         holes: &mut dyn Iterator<Item = egui::Rect>,
-    ) -> Option<Box<dyn Any>> {
+    ) -> Option<Box<dyn Any + Send>> {
         let parent = hframe.rect;
         let holes = holes.map(|hole| rect_to_relative(hole, parent));
         let parent = rect_to_relative(parent, parent);

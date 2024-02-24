@@ -34,7 +34,6 @@ pub struct App {
     yt_open: bool,
     count: i32,
     video_open: bool,
-    hframes: hframe::Registry,
 }
 
 impl App {
@@ -58,7 +57,7 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.hframes.aware({
+        hframe::aware(ctx, {
             egui::Window::new("None").show(ctx, |ui| {
                 ui.centered_and_justified(|ui| {
                     ui.label("Empty");
@@ -66,11 +65,11 @@ impl eframe::App for App {
             })
         });
 
-        self.hframes.aware({
+        hframe::aware(ctx, {
             egui::Window::new("Devtools").show(ctx, |ui| {
                 ui.label(format!(
                     "Mask Strategy: {}",
-                    self.hframes.mask_strategy_meta().name
+                    hframe::mask_strategy_meta(ctx).name
                 ));
                 let video_toggle_text = if self.video_open {
                     "Force close video"
@@ -92,29 +91,26 @@ impl eframe::App for App {
             })
         });
 
-        self.hframes
-            .window(
-                "counter",
-                "Web Counter",
-                &COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()),
-            )
-            .open(&mut self.counter_open)
-            .show(ctx);
+        hframe::Window::new(
+            "counter",
+            "Web Counter",
+            &COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()),
+        )
+        .open(&mut self.counter_open)
+        .show(ctx);
 
-        self.hframes
-            .window("iframe", "Iframe", IFRAME)
+        hframe::Window::new("iframe", "Iframe", IFRAME)
             .open(&mut self.iframe_open)
             .show(ctx);
 
         if self.video_open {
-            self.hframes.window("video", "Video", VIDEO).show(ctx);
+            hframe::Window::new("video", "Video", VIDEO).show(ctx);
         }
 
-        self.hframes
-            .window("yt", "YT", YT)
+        hframe::Window::new("yt", "YT", YT)
             .open(&mut self.yt_open)
             .show(ctx);
 
-        self.hframes.sync(ctx);
+        hframe::sync(ctx);
     }
 }

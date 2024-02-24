@@ -43,7 +43,7 @@ impl MaskStrategy for Auto {
         &self,
         state: &WindowState,
         prev_rects: &mut dyn Iterator<Item = egui::Rect>,
-    ) -> Option<Box<dyn Any>> {
+    ) -> Option<Box<dyn Any + Send>> {
         self.inner.compute_mask(state, prev_rects)
     }
 

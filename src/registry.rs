@@ -1,10 +1,10 @@
 use crate::aware::Awares;
 use crate::mask_strategies;
-use crate::utils::{eid, sync_hframe};
-use crate::{MaskStrategy, MaskStrategyMeta, Window, WindowState};
+use crate::utils::{eid, sync_hframe, EguiCheap};
+use crate::{MaskStrategy, MaskStrategyMeta, WindowState};
 use std::collections::HashSet;
 
-pub struct Registry {
+pub(crate) struct Registry {
     pub(crate) hframes: Vec<WindowState>,
     pub(crate) hframe_awares: Awares,
     pub(crate) hframes_since_last_sync: HashSet<String>,
@@ -18,7 +18,7 @@ impl Default for Registry {
 }
 
 impl Registry {
-    pub fn new() -> Self {
+    fn new() -> Self {
         let style = web_sys::window()
             .unwrap()
             .document()
@@ -52,17 +52,7 @@ impl Registry {
         }
     }
 
-    pub fn window<'reg>(&'reg mut self, id: &str, title: &str, content: &str) -> Window<'_, 'reg> {
-        Window {
-            id: id.to_string(),
-            title: title.to_string(),
-            content: content.to_string(),
-            open: None,
-            registry: self,
-        }
-    }
-
-    pub fn aware<R>(
+    fn aware<R>(
         &mut self,
         inner_response: Option<egui::InnerResponse<R>>,
     ) -> Option<egui::InnerResponse<R>> {
@@ -96,7 +86,7 @@ impl Registry {
         });
     }
 
-    pub fn sync(&mut self, ctx: &egui::Context) {
+    fn sync(&mut self, ctx: &egui::Context) {
         self.clip(ctx);
         for state in &self.hframes {
             sync_hframe(state, &*self.mask_strategy);
@@ -121,13 +111,51 @@ impl Registry {
         self.hframes_since_last_sync.clear();
     }
 
-    pub fn set_mask_strategy<M: MaskStrategy + 'static>(&mut self, mask_strategy: M) {
+    fn set_mask_strategy<M: MaskStrategy + 'static>(&mut self, mask_strategy: M) {
         self.mask_strategy.cleanup();
         self.mask_strategy = Box::new(mask_strategy);
         self.mask_strategy.setup();
     }
 
-    pub fn mask_strategy_meta(&self) -> MaskStrategyMeta {
+    fn mask_strategy_meta(&self) -> MaskStrategyMeta {
         self.mask_strategy.meta()
     }
+}
+
+fn create_cheap_registry() -> EguiCheap<Registry> {
+    EguiCheap::new(Registry::new())
+}
+
+pub(crate) fn get_or_insert_registry(ctx: &egui::Context) -> EguiCheap<Registry> {
+    ctx.memory_mut(
+        |mem| match mem.data.get_temp::<EguiCheap<Registry>>(egui::Id::NULL) {
+            Some(registry) => registry,
+            None => {
+                let registry = create_cheap_registry();
+                mem.data.insert_temp(egui::Id::NULL, registry.clone());
+                registry
+            }
+        },
+    )
+}
+
+pub fn aware<R>(
+    ctx: &egui::Context,
+    inner_response: Option<egui::InnerResponse<R>>,
+) -> Option<egui::InnerResponse<R>> {
+    let reg = get_or_insert_registry(ctx);
+    let mut reg = reg.lock().unwrap();
+    reg.aware(inner_response)
+}
+
+pub fn sync(ctx: &egui::Context) {
+    let reg = get_or_insert_registry(ctx);
+    let mut reg = reg.lock().unwrap();
+    reg.sync(ctx);
+}
+
+pub fn mask_strategy_meta(ctx: &egui::Context) -> MaskStrategyMeta {
+    let reg = get_or_insert_registry(ctx);
+    let reg = reg.lock().unwrap();
+    reg.mask_strategy_meta()
 }

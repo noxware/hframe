@@ -10,7 +10,7 @@ pub struct WindowState {
     pub(crate) rect: egui::Rect,
     pub(crate) interactable: bool,
     pub(crate) visible: bool,
-    pub(crate) mask: Option<Box<dyn Any>>,
+    pub(crate) mask: Option<Box<dyn Any + Send>>,
     pub(crate) content_changed: bool,
 }
 

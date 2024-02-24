@@ -1,3 +1,6 @@
+use std::ops::Deref;
+use std::sync::{Arc, Mutex};
+
 use crate::{MaskStrategy, WindowState};
 
 macro_rules! eid {
@@ -52,4 +55,26 @@ pub(crate) fn is_gecko() -> bool {
         && !ua.contains("chrome")
         && !ua.contains("safari")
         && !ua.contains("opera")
+}
+
+pub(crate) struct EguiCheap<T>(Arc<Mutex<T>>);
+
+impl<T> EguiCheap<T> {
+    pub(crate) fn new(inner: T) -> Self {
+        Self(Arc::new(Mutex::new(inner)))
+    }
+}
+
+impl<T> Deref for EguiCheap<T> {
+    type Target = Mutex<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &*self.0
+    }
+}
+
+impl<T> Clone for EguiCheap<T> {
+    fn clone(&self) -> Self {
+        EguiCheap(self.0.clone())
+    }
 }

@@ -1,14 +1,22 @@
-use crate::{utils::eid, Registry, WindowState};
+use crate::{get_or_insert_registry, utils::eid, WindowState};
 
-pub struct Window<'open, 'reg> {
+pub struct Window<'open> {
     pub(crate) id: String,
     pub(crate) title: String,
     pub(crate) content: String,
     pub(crate) open: Option<&'open mut bool>,
-    pub(crate) registry: &'reg mut Registry,
 }
 
-impl<'open, 'reg> Window<'open, 'reg> {
+impl<'open> Window<'open> {
+    pub fn new(id: &str, title: &str, content: &str) -> Self {
+        Self {
+            id: id.to_string(),
+            title: title.to_string(),
+            content: content.to_string(),
+            open: None,
+        }
+    }
+
     pub fn open(mut self, open: &'open mut bool) -> Self {
         self.open = Some(open);
         self
@@ -20,8 +28,10 @@ impl<'open, 'reg> Window<'open, 'reg> {
             title,
             content,
             open,
-            registry,
         } = self;
+
+        let registry = get_or_insert_registry(ctx);
+        let registry = &mut *registry.lock().unwrap();
 
         let open = if let Some(open) = open {
             if !*open {
