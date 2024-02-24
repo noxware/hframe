@@ -34,3 +34,23 @@ pub(crate) fn sync_hframe(state: &WindowState, mask_strategy: &dyn MaskStrategy)
 
     mask_strategy.mask(&state);
 }
+
+pub(crate) fn is_gecko() -> bool {
+    let ua = web_sys::window()
+        .unwrap()
+        .navigator()
+        .user_agent()
+        .unwrap()
+        .to_lowercase();
+
+    ua.contains("gecko")
+        && !ua.contains("like gecko")
+        && !ua.contains("webkit")
+        && !ua.contains("edge")
+        && !ua.contains("trident")
+        && !ua.contains("presto")
+        && !ua.contains("blink")
+        && !ua.contains("chrome")
+        && !ua.contains("safari")
+        && !ua.contains("opera")
+}

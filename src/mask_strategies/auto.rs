@@ -1,6 +1,7 @@
-use super::DocumentMask;
+use super::{DataMask, DocumentMask};
 use crate::{
     mask_strategy::{MaskStrategy, MaskStrategyMeta},
+    utils,
     window_state::WindowState,
 };
 use std::any::Any;
@@ -11,8 +12,14 @@ pub struct Auto {
 
 impl Auto {
     pub fn new() -> Self {
-        Self {
-            inner: Box::new(DocumentMask::new()),
+        if utils::is_gecko() {
+            Self {
+                inner: Box::new(DocumentMask::new()),
+            }
+        } else {
+            Self {
+                inner: Box::new(DataMask::new()),
+            }
         }
     }
 }
