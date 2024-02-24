@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use crate::WindowState;
+use crate::HtmlWindowState;
 
 #[derive(Clone, Debug)]
 pub struct MaskStrategyMeta {
@@ -12,9 +12,9 @@ pub trait MaskStrategy: Send + Sync {
     fn cleanup(&self);
     fn compute_mask(
         &self,
-        state: &WindowState,
+        state: &HtmlWindowState,
         prev_rects: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any + Send>>;
-    fn mask(&self, state: &WindowState);
+    fn mask(&self, state: &HtmlWindowState);
     fn meta(&self) -> MaskStrategyMeta;
 }

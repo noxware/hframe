@@ -1,7 +1,7 @@
 use crate::utils::rect_to_relative;
 use crate::{
+    html_window_state::HtmlWindowState,
     mask_strategy::{MaskStrategy, MaskStrategyMeta},
-    window_state::WindowState,
 };
 use std::any::Any;
 
@@ -67,7 +67,7 @@ impl MaskStrategy for DataMask {
 
     fn compute_mask(
         &self,
-        hframe: &WindowState,
+        hframe: &HtmlWindowState,
         holes: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any + Send>> {
         let parent = hframe.rect;
@@ -94,7 +94,7 @@ impl MaskStrategy for DataMask {
         Some(Box::new(encoded))
     }
 
-    fn mask(&self, state: &WindowState) {
+    fn mask(&self, state: &HtmlWindowState) {
         let window = web_sys::window().unwrap();
         let document = window.document().unwrap();
 

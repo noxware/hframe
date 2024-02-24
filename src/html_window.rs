@@ -1,13 +1,13 @@
-use crate::{get_or_insert_registry, utils::eid, WindowState};
+use crate::{get_or_insert_registry, utils::eid, HtmlWindowState};
 
-pub struct Window<'open> {
+pub struct HtmlWindow<'open> {
     pub(crate) id: String,
     pub(crate) title: String,
     pub(crate) content: String,
     pub(crate) open: Option<&'open mut bool>,
 }
 
-impl<'open> Window<'open> {
+impl<'open> HtmlWindow<'open> {
     pub fn new(title: &str) -> Self {
         Self {
             id: title.to_lowercase().replace(' ', "-"),
@@ -61,7 +61,7 @@ impl<'open> Window<'open> {
             None => {
                 registry
                     .hframes
-                    .push(WindowState::new(&id, &title, &content));
+                    .push(HtmlWindowState::new(&id, &title, &content));
                 registry.hframes.last_mut().unwrap()
             }
         };

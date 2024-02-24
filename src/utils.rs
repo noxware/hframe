@@ -1,7 +1,7 @@
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
-use crate::{MaskStrategy, WindowState};
+use crate::{HtmlWindowState, MaskStrategy};
 
 macro_rules! eid {
     ($id:expr) => {
@@ -17,7 +17,7 @@ pub(crate) fn rect_to_relative(rect: egui::Rect, parent: egui::Rect) -> egui::Re
     egui::Rect::from_min_max(min.to_pos2(), max.to_pos2())
 }
 
-pub(crate) fn sync_hframe(state: &WindowState, mask_strategy: &dyn MaskStrategy) {
+pub(crate) fn sync_hframe(state: &HtmlWindowState, mask_strategy: &dyn MaskStrategy) {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
 

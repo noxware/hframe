@@ -1,7 +1,7 @@
 use std::any::Any;
 
 #[derive(Debug)]
-pub struct WindowState {
+pub struct HtmlWindowState {
     // All of these should be considered private.
     pub(crate) id: String,
     pub(crate) title: String,
@@ -14,7 +14,7 @@ pub struct WindowState {
     pub(crate) content_changed: bool,
 }
 
-impl WindowState {
+impl HtmlWindowState {
     pub fn new(id: &str, title: &str, content: &str) -> Self {
         Self {
             id: id.to_string(),

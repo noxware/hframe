@@ -1,8 +1,8 @@
 use super::{DataMask, DocumentMask};
 use crate::{
+    html_window_state::HtmlWindowState,
     mask_strategy::{MaskStrategy, MaskStrategyMeta},
     utils,
-    window_state::WindowState,
 };
 use std::any::Any;
 
@@ -41,13 +41,13 @@ impl MaskStrategy for Auto {
 
     fn compute_mask(
         &self,
-        state: &WindowState,
+        state: &HtmlWindowState,
         prev_rects: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any + Send>> {
         self.inner.compute_mask(state, prev_rects)
     }
 
-    fn mask(&self, state: &WindowState) {
+    fn mask(&self, state: &HtmlWindowState) {
         self.inner.mask(state);
     }
 }

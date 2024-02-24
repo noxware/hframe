@@ -1,11 +1,11 @@
 use crate::aware::Awares;
 use crate::mask_strategies;
 use crate::utils::{eid, sync_hframe, EguiCheap};
-use crate::{MaskStrategy, MaskStrategyMeta, WindowState};
+use crate::{HtmlWindowState, MaskStrategy, MaskStrategyMeta};
 use std::collections::HashSet;
 
 pub(crate) struct Registry {
-    pub(crate) hframes: Vec<WindowState>,
+    pub(crate) hframes: Vec<HtmlWindowState>,
     pub(crate) hframe_awares: Awares,
     pub(crate) hframes_since_last_sync: HashSet<String>,
     mask_strategy: Box<dyn MaskStrategy>,
