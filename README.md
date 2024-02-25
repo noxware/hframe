@@ -1,6 +1,6 @@
 # hframe
 
-## About
+[![CI](https://github.com/noxware/hframe/actions/workflows/rust.yml/badge.svg)](https://github.com/noxware/hframe/actions/workflows/rust.yml)
 
 Show HTML content "inside" your [egui](https://github.com/emilk/egui) rendered application.
 
