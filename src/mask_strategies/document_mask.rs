@@ -42,6 +42,10 @@ macro_rules! hframe_style {
     };
 }
 
+/// Strategy that produces mask elements inside SVG elements in the DOM that are
+/// set directly as masks for HTML elements.
+///
+/// Should only work in Firefox and latest Chrome.
 pub struct DocumentMask;
 
 impl Default for DocumentMask {

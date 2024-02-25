@@ -44,6 +44,11 @@ macro_rules! hframe_style {
     };
 }
 
+/// Strategy that produces SVG images encoded as data URIs that are set as HTML
+/// elements masks.
+///
+/// A bit inneficient but should work well in everything except Firefox where a
+/// more efficient approach can be used safely anyways.
 pub struct DataMask;
 
 impl Default for DataMask {

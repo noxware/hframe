@@ -1,5 +1,10 @@
 use crate::{get_or_insert_registry, utils::eid, HtmlWindowState};
 
+/// A window capable of displaying HTML content inside.
+///
+/// It's API mimics egui's Window API.
+///
+/// Note: `hframe` is automatically aware of this window.
 pub struct HtmlWindow<'open> {
     pub(crate) id: String,
     pub(crate) title: String,
@@ -8,6 +13,12 @@ pub struct HtmlWindow<'open> {
 }
 
 impl<'open> HtmlWindow<'open> {
+    /// Create a new HtmlWindow.
+    ///
+    /// This function mimics `new` from egui's Window. It takes the window title
+    /// which must be unique as it is used to compute the window id and also to
+    /// set ids for HTML elements. Check the `id` method if you want to set a
+    /// different id.
     pub fn new(title: &str) -> Self {
         Self {
             id: title.to_lowercase().replace(' ', "-"),
@@ -17,21 +28,34 @@ impl<'open> HtmlWindow<'open> {
         }
     }
 
+    /// Mimics the `open` method of egui's Window.
     pub fn open(mut self, open: &'open mut bool) -> Self {
         self.open = Some(open);
         self
     }
 
+    /// Set a specific id explicitly.
     pub fn id(mut self, id: &str) -> Self {
         self.id = id.to_string();
         self
     }
 
+    /// Set/change the HTML content of the window.
+    ///
+    /// The initially provided HTML will be used to generete the HTML element.
+    /// As long as the HTML doesn't change, this will not re-render the content.
+    ///
+    /// If you change the content, then the HTML will be re-rendered which is
+    /// useful if you need to display controlled and reactive content.
     pub fn content(mut self, content: &str) -> Self {
         self.content = content.to_string();
         self
     }
 
+    /// Displays the window and it's content.
+    ///
+    /// Note: You will still need to call `sync` at the end of the update loop
+    /// to make this work propertly.
     pub fn show(self, ctx: &egui::Context) {
         let Self {
             id,

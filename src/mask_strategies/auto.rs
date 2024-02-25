@@ -6,6 +6,10 @@ use crate::{
 };
 use std::any::Any;
 
+/// A masking strategy that delegates the work to other strategy based on the
+/// web browser.
+///
+/// This is the default strategy.
 pub struct Auto {
     inner: Box<dyn MaskStrategy>,
 }
