@@ -39,7 +39,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --lib
+          args: --lib --target wasm32-unknown-unknown
 
   fmt:
     name: Rustfmt
@@ -71,4 +71,4 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: --target wasm32-unknown-unknown -- -D warnings
