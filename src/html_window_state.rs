@@ -17,7 +17,7 @@ pub struct HtmlWindowState {
 }
 
 impl HtmlWindowState {
-    pub fn new(id: &str, title: &str, content: &str) -> Self {
+    pub(crate) fn new(id: &str, title: &str, content: &str) -> Self {
         Self {
             id: id.to_string(),
             title: title.to_string(),
