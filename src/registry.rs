@@ -139,7 +139,7 @@ pub(crate) fn get_or_insert_registry(ctx: &egui::Context) -> EguiCheap<Registry>
     )
 }
 
-pub fn aware<R>(inner_response: Option<egui::InnerResponse<R>>) -> Option<egui::InnerResponse<R>> {
+fn aware<R>(inner_response: Option<egui::InnerResponse<R>>) -> Option<egui::InnerResponse<R>> {
     let inner_response = inner_response?;
     let ctx = &inner_response.response.ctx;
 
@@ -148,25 +148,38 @@ pub fn aware<R>(inner_response: Option<egui::InnerResponse<R>>) -> Option<egui::
     reg.aware(Some(inner_response))
 }
 
+/// Syncs hframe internal stuff between the egui and web worlds. This function
+/// **must be always called** at the end of the update loop unconditionally.
 pub fn sync(ctx: &egui::Context) {
     let reg = get_or_insert_registry(ctx);
     let mut reg = reg.lock().unwrap();
     reg.sync(ctx);
 }
 
+/// Get the meta information of the masking strategy currently in use.
+///
+/// This is useful if you need to know which strategy is actually being used
+/// when using the `Auto` strategy.
 pub fn mask_strategy_meta(ctx: &egui::Context) -> MaskStrategyMeta {
     let reg = get_or_insert_registry(ctx);
     let reg = reg.lock().unwrap();
     reg.mask_strategy_meta()
 }
 
+/// Allows you to set a specific mask strategy at runtime.
 pub fn set_mask_strategy<M: MaskStrategy + 'static>(ctx: &egui::Context, mask_strategy: M) {
     let reg = get_or_insert_registry(ctx);
     let mut reg = reg.lock().unwrap();
     reg.set_mask_strategy(mask_strategy);
 }
 
+/// Allows you to implement `aware` for egui entities so hframe can know about
+/// their existence when computing masks and handling events.
 pub trait Aware {
+    /// Let hframe know about the existence of this entity.
+    ///
+    /// You must call this in anything from the egui world that can overlap
+    /// with HTML content (like normal egui windows).
     fn aware(self) -> Self;
 }
 

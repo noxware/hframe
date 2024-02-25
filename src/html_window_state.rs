@@ -1,5 +1,7 @@
 use std::any::Any;
 
+/// Keeps track of the state of an HTML Window. Only relevant if you want to
+/// implement your own masking strategy.
 #[derive(Debug)]
 pub struct HtmlWindowState {
     // All of these should be considered private.
@@ -7,10 +9,10 @@ pub struct HtmlWindowState {
     pub(crate) title: String,
     pub(crate) content: String,
     // Specially the following internal ones.
-    pub(crate) rect: egui::Rect,
+    pub rect: egui::Rect,
     pub(crate) interactable: bool,
     pub(crate) visible: bool,
-    pub(crate) mask: Option<Box<dyn Any + Send>>,
+    pub mask: Option<Box<dyn Any + Send>>,
     pub(crate) content_changed: bool,
 }
 
