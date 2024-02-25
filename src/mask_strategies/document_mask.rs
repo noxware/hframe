@@ -48,12 +48,6 @@ macro_rules! hframe_style {
 /// Should only work in Firefox and latest Chrome.
 pub struct DocumentMask;
 
-impl Default for DocumentMask {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl DocumentMask {
     pub fn new() -> Self {
         Self

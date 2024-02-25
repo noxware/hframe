@@ -51,12 +51,6 @@ macro_rules! hframe_style {
 /// more efficient approach can be used safely anyways.
 pub struct DataMask;
 
-impl Default for DataMask {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl DataMask {
     pub fn new() -> Self {
         Self
