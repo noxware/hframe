@@ -52,6 +52,7 @@ macro_rules! hframe_style {
 pub struct DataMask;
 
 impl DataMask {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self
     }

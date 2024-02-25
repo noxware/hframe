@@ -15,6 +15,7 @@ pub struct Auto {
 }
 
 impl Auto {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         if utils::is_gecko() {
             Self {

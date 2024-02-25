@@ -49,6 +49,7 @@ macro_rules! hframe_style {
 pub struct DocumentMask;
 
 impl DocumentMask {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self
     }
