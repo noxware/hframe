@@ -46,6 +46,12 @@ macro_rules! hframe_style {
 
 pub struct DataMask;
 
+impl Default for DataMask {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DataMask {
     pub fn new() -> Self {
         Self

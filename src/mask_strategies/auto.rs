@@ -10,6 +10,12 @@ pub struct Auto {
     inner: Box<dyn MaskStrategy>,
 }
 
+impl Default for Auto {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Auto {
     pub fn new() -> Self {
         if utils::is_gecko() {

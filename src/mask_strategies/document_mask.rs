@@ -44,6 +44,12 @@ macro_rules! hframe_style {
 
 pub struct DocumentMask;
 
+impl Default for DocumentMask {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DocumentMask {
     pub fn new() -> Self {
         Self

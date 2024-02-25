@@ -80,7 +80,7 @@ impl Registry {
                     .find(|hframe| eid!(&hframe.id) == *id)
                 {
                     let mut prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
-                    hframe.mask = self.mask_strategy.compute_mask(&hframe, &mut prev_rects);
+                    hframe.mask = self.mask_strategy.compute_mask(hframe, &mut prev_rects);
                 }
             }
         });

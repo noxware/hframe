@@ -34,7 +34,7 @@ pub(crate) fn sync_hframe(state: &HtmlWindowState, mask_strategy: &dyn MaskStrat
         element.set_inner_html(&state.content);
     }
 
-    mask_strategy.mask(&state);
+    mask_strategy.mask(state);
 }
 
 pub(crate) fn is_gecko() -> bool {
@@ -69,7 +69,7 @@ impl<T> Deref for EguiCheap<T> {
     type Target = Mutex<T>;
 
     fn deref(&self) -> &Self::Target {
-        &*self.0
+        &self.0
     }
 }
 
