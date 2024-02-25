@@ -39,3 +39,13 @@ impl eframe::App for App {
 ```
 
 For a more complete example see [demo's app.rs](https://github.com/noxware/hframe/blob/master/examples/demo/src/app.rs).
+
+## Running the demo
+
+> Ensure you have `trunk` installed with `cargo install --locked trunk`.
+
+```
+git clone https://github.com/noxware/hframe
+cd hframe/examples/demo
+trunk serve --open
+```
