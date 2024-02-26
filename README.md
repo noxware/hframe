@@ -1,4 +1,4 @@
-# hframe ![License](https://img.shields.io/badge/License-MIT%2FApache%202.0-blue) [![CI](https://github.com/noxware/hframe/actions/workflows/rust.yml/badge.svg)](https://github.com/noxware/hframe/actions/workflows/rust.yml) [![Crates.io Version](https://img.shields.io/crates/v/hframe)](https://crates.io/crates/hframe)
+# hframe
 
 Show HTML content "inside" your [egui](https://github.com/emilk/egui) rendered application. "hframe" stands for "HTML Frame".
 
