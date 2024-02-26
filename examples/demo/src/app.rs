@@ -102,6 +102,12 @@ impl eframe::App for App {
                             hframe::mask_strategies::DocumentMask::new(),
                         );
                     }
+                    if ui.button("Hide").clicked() {
+                        hframe::set_mask_strategy(ctx, hframe::mask_strategies::Hide::new());
+                    }
+                    if ui.button("Nop").clicked() {
+                        hframe::set_mask_strategy(ctx, hframe::mask_strategies::Nop::new());
+                    }
                 });
             })
             .aware();

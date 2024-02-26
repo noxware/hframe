@@ -16,6 +16,9 @@ pub trait MaskStrategy: Send + Sync {
     fn setup(&self);
     /// Anything that must be done when this strategy is unset. For example,
     /// when changing to another strategy at runtime.
+    ///
+    /// `hframe` already takes care of cleanning inline styles for the HTML
+    /// containers of the web content.
     fn cleanup(&self);
     /// A function that can be used to compute any information you may need to
     /// mask the HTML elements later.

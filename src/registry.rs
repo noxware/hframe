@@ -121,7 +121,9 @@ impl Registry {
         self.mask_strategy.cleanup();
         for state in &mut self.hframes {
             state.mask = None;
+            state.get_html_element().remove_attribute("style").unwrap();
         }
+
         self.mask_strategy = Box::new(mask_strategy);
         self.mask_strategy.setup();
     }

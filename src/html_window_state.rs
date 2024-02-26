@@ -29,4 +29,12 @@ impl HtmlWindowState {
             content_changed: false,
         }
     }
+
+    // TODO: Consider making this public, maybe with a different name or from a
+    // different place.
+    pub(crate) fn get_html_element(&self) -> web_sys::Element {
+        let window = web_sys::window().unwrap();
+        let document = window.document().unwrap();
+        document.get_element_by_id(&self.id).unwrap()
+    }
 }

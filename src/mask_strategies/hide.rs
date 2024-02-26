@@ -12,12 +12,12 @@ macro_rules! hframe_style {
             $state.rect.min.x,
             $state.rect.width(),
             $state.rect.height(),
-            if $state.interactable {
+            if $state.interactable && $state.mask.is_none() {
                 ""
             } else {
                 "pointer-events: none;"
             },
-            if $state.visible {
+            if $state.visible && $state.mask.is_none() {
                 ""
             } else {
                 "visibility: hidden;"
@@ -26,21 +26,26 @@ macro_rules! hframe_style {
     };
 }
 
-/// A non-op strategy that does nothing.
-///
-/// Using this disables masking.
-pub struct Nop;
+struct Empty;
 
-impl Nop {
+/// A strategy that hides the HTML element if an aware area is in front of it.
+///
+/// This is simple, well-supported and performant but you lose the ability to
+/// put stuff in front of your HTML content.
+pub struct Hide;
+
+impl Hide {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self
     }
 }
 
-impl MaskStrategy for Nop {
+impl MaskStrategy for Hide {
     fn meta(&self) -> MaskStrategyMeta {
-        MaskStrategyMeta { name: "nop".into() }
+        MaskStrategyMeta {
+            name: "hide".into(),
+        }
     }
 
     fn setup(&self) {}
@@ -49,10 +54,13 @@ impl MaskStrategy for Nop {
 
     fn compute_mask(
         &self,
-        _state: &HtmlWindowState,
-        _prev_rects: &mut dyn Iterator<Item = egui::Rect>,
+        _hframe: &HtmlWindowState,
+        holes: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any + Send>> {
-        None
+        match holes.next() {
+            Some(_) => Some(Box::new(Empty)),
+            None => None,
+        }
     }
 
     fn mask(&self, state: &HtmlWindowState) {
