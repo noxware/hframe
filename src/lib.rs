@@ -1,5 +1,3 @@
-//! [![CI](https://github.com/noxware/hframe/actions/workflows/rust.yml/badge.svg)](https://github.com/noxware/hframe/actions/workflows/rust.yml)
-//!
 //! Show HTML content "inside" your [egui](https://github.com/emilk/egui) rendered application. "hframe" stands for "HTML Frame".
 //!
 //! > **Note:** `hframe` only works when the application is compiled to WebAssembly and run in a browser. But you can still make a desktop up by leveraging [Tauri](https://tauri.app/).
