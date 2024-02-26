@@ -83,6 +83,26 @@ impl eframe::App for App {
                         self.count -= 1;
                     }
                 });
+                ui.horizontal(|ui| {
+                    egui::warn_if_debug_build(ui);
+                    egui::widgets::global_dark_light_mode_buttons(ui);
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Mask Strategy: ");
+
+                    if ui.button("Auto").clicked() {
+                        hframe::set_mask_strategy(ctx, hframe::mask_strategies::Auto::new());
+                    }
+                    if ui.button("Data").clicked() {
+                        hframe::set_mask_strategy(ctx, hframe::mask_strategies::DataMask::new());
+                    }
+                    if ui.button("Document").clicked() {
+                        hframe::set_mask_strategy(
+                            ctx,
+                            hframe::mask_strategies::DocumentMask::new(),
+                        );
+                    }
+                });
             })
             .aware();
 

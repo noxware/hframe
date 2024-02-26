@@ -19,6 +19,10 @@ pub const MASK_TEMPLATE: &str = r#"
 pub const HOLE_TEMPLATE: &str =
     r#"<rect x="{x}" y="{y}" width="{width}" height="{height}" rx="5" fill="black" />"#;
 
+pub const MASKS_CONTAINER: &str = r#"
+<div id="masks-container" style="position: absolute; top: 0; left: 0; width: 0; height: 0; overflow: hidden;"></div>
+"#;
+
 macro_rules! hframe_style {
     ($state:expr) => {
         format!(
@@ -62,10 +66,23 @@ impl MaskStrategy for DocumentMask {
         }
     }
 
-    fn setup(&self) {}
+    fn setup(&self) {
+        let window = web_sys::window().unwrap();
+        let document = window.document().unwrap();
+        let body = document.body().unwrap();
+
+        let container = document.create_element("div").unwrap();
+        body.append_child(&container).unwrap();
+
+        container.set_outer_html(MASKS_CONTAINER);
+    }
 
     fn cleanup(&self) {
-        todo!("You can't change from this strategy")
+        let window = web_sys::window().unwrap();
+        let document = window.document().unwrap();
+        let container = document.get_element_by_id("masks-container").unwrap();
+
+        container.remove();
     }
 
     fn compute_mask(
@@ -99,7 +116,6 @@ impl MaskStrategy for DocumentMask {
     fn mask(&self, state: &HtmlWindowState) {
         let window = web_sys::window().unwrap();
         let document = window.document().unwrap();
-        let body = document.body().unwrap();
 
         let element = document.get_element_by_id(&state.id).unwrap();
 
@@ -107,7 +123,8 @@ impl MaskStrategy for DocumentMask {
             .get_element_by_id(&format!("{}-svg", state.id))
             .unwrap_or_else(|| {
                 let svg = document.create_element("svg").unwrap();
-                body.append_child(&svg).unwrap();
+                let container = document.get_element_by_id("masks-container").unwrap();
+                container.append_child(&svg).unwrap();
                 svg
             });
 

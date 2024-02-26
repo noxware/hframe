@@ -44,12 +44,15 @@ impl Registry {
             .unwrap();
         }
 
-        Self {
+        let mut res = Self {
             hframes: Vec::new(),
             hframe_awares: Awares::default(),
             hframes_since_last_sync: HashSet::new(),
-            mask_strategy: Box::new(mask_strategies::Auto::new()),
-        }
+            mask_strategy: Box::new(mask_strategies::Nop::new()),
+        };
+
+        res.set_mask_strategy(mask_strategies::Auto::new());
+        res
     }
 
     fn aware<R>(
@@ -113,6 +116,9 @@ impl Registry {
 
     fn set_mask_strategy<M: MaskStrategy + 'static>(&mut self, mask_strategy: M) {
         self.mask_strategy.cleanup();
+        for state in &mut self.hframes {
+            state.mask = None;
+        }
         self.mask_strategy = Box::new(mask_strategy);
         self.mask_strategy.setup();
     }

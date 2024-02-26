@@ -67,9 +67,7 @@ impl MaskStrategy for DataMask {
 
     fn setup(&self) {}
 
-    fn cleanup(&self) {
-        todo!("You can't change from this strategy")
-    }
+    fn cleanup(&self) {}
 
     fn compute_mask(
         &self,
