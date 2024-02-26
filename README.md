@@ -53,6 +53,10 @@ cd hframe/examples/demo
 trunk serve --open
 ```
 
+## Screenshot
+
+![Screenshot](https://github.com/noxware/hframe/assets/7684329/bde21df4-697c-4255-b2c5-732d5b72ea0b)
+
 ## How does it work?
 
 `hframe` renders the HTML content on top of the canvas where `egui` is rendering. Web content is absolute positioned following specifc areas of the canvas. To be
