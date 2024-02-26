@@ -10,7 +10,10 @@ pub struct MaskStrategyMeta {
 }
 
 /// Trait for implementing custom masking strategies for HTML elements
-/// controlled by hframe.
+/// controlled by hframe. The specific API methods of this trait are considered
+/// unstable.
+///
+/// Methods here may change in future versions.
 pub trait MaskStrategy: Send + Sync {
     /// Anything that must be done when this strategy is set.
     fn setup(&self);

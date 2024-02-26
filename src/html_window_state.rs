@@ -1,7 +1,7 @@
 use std::any::Any;
 
-/// Keeps track of the state of an HTML Window. Only relevant if you want to
-/// implement your own masking strategy.
+/// Keeps track of the state of an HTML Window. Only relevant if you are playing
+/// with custom masking strategies (which is considered unstable).
 #[derive(Debug)]
 pub struct HtmlWindowState {
     // All of these should be considered private.
