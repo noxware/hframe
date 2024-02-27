@@ -20,7 +20,7 @@ pub(crate) fn rect_to_relative(rect: egui::Rect, parent: egui::Rect) -> egui::Re
 macro_rules! hframe_style {
     ($state:expr) => {
         format!(
-            "top: {}px; left: {}px; width: {}px; height: {}px; {}; {};",
+            "top: {}px; left: {}px; width: {}px; height: {}px; {}; {}; z-index: {}",
             $state.rect.min.y,
             $state.rect.min.x,
             $state.rect.width(),
@@ -34,7 +34,8 @@ macro_rules! hframe_style {
                 ""
             } else {
                 "visibility: hidden;"
-            }
+            },
+            $state.z_index
         )
     };
 }

@@ -11,6 +11,7 @@ pub struct HtmlWindowState {
     pub(crate) interactable: bool,
     pub(crate) visible: bool,
     pub(crate) content_changed: bool,
+    pub(crate) z_index: i64,
 }
 
 impl HtmlWindowState {
@@ -23,6 +24,7 @@ impl HtmlWindowState {
             interactable: true,
             visible: true,
             content_changed: false,
+            z_index: 0,
         }
     }
 

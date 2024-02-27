@@ -1,7 +1,7 @@
 use web_sys::wasm_bindgen::JsCast;
 
 const OVERLAYS_CONTAINER: &str = r#"
-<div id="overlays-container" style="position: absolute; top: 0; left: 0; width: 0; height: 0; overflow: visible; z-index: 100000; pointer-events: none;"></div>
+<div id="overlays-container" style="position: absolute; top: 0; left: 0; width: 0; height: 0; overflow: visible; pointer-events: none;"></div>
 "#;
 
 const OVERLAY_TEMPLATE: &str = r#"
@@ -11,7 +11,7 @@ const OVERLAY_TEMPLATE: &str = r#"
 "#;
 
 const OVERLAY_STYLE_TEMPLATE: &str =
-    "top: {top}px; left: {left}px; width: {width}px; height: {height}px; background-color: green; position: absolute;";
+    "top: {top}px; left: {left}px; width: {width}px; height: {height}px; z-index: {z_index}; background-color: green; position: absolute;";
 
 pub(crate) fn setup() {
     let window = web_sys::window().unwrap();
@@ -98,7 +98,11 @@ fn capture_rect_into_overlay(id: egui::Id, rect: egui::Rect) {
         .unwrap();
 }
 
-pub(crate) fn create_or_update_overlay(egui_id: egui::Id, rect: egui::Rect) -> web_sys::Element {
+pub(crate) fn create_or_update_overlay(
+    egui_id: egui::Id,
+    rect: egui::Rect,
+    z_index: i64,
+) -> web_sys::Element {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
     let container = get_container();
@@ -111,11 +115,14 @@ pub(crate) fn create_or_update_overlay(egui_id: egui::Id, rect: egui::Rect) -> w
 
     let id = overlay_id(egui_id);
 
+    let z_index = z_index + 1000;
+
     let style = OVERLAY_STYLE_TEMPLATE
         .replace("{top}", &rect.min.y.to_string())
         .replace("{left}", &rect.min.x.to_string())
         .replace("{width}", &rect.width().to_string())
-        .replace("{height}", &rect.height().to_string());
+        .replace("{height}", &rect.height().to_string())
+        .replace("{z_index}", &z_index.to_string());
 
     let content = OVERLAY_TEMPLATE
         .replace("{id}", &id)

@@ -72,10 +72,19 @@ impl Registry {
                 })
                 .collect::<Vec<_>>();
 
-            let sorted_awares = sorted_awares.iter().rev().collect::<Vec<_>>();
+            let sorted_awares = sorted_awares.iter().copied();
 
-            for (id, rect) in sorted_awares.iter() {
-                canvas_overlay::create_or_update_overlay(*id, *rect);
+            for (index, (id, rect)) in sorted_awares.enumerate() {
+                let z_index = (index * 3) as i64;
+                canvas_overlay::create_or_update_overlay(id, rect, z_index);
+
+                if let Some(hframe) = self
+                    .hframes
+                    .iter_mut()
+                    .find(|hframe| eid!(&hframe.id) == id)
+                {
+                    hframe.z_index = z_index + 1000 + 1;
+                }
             }
 
             /*for (index, (id, _rect)) in sorted_awares.iter().enumerate() {
