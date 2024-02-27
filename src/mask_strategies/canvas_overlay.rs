@@ -11,7 +11,7 @@ const OVERLAY_TEMPLATE: &str = r#"
 "#;
 
 const OVERLAY_STYLE_TEMPLATE: &str =
-    "top: {top}px; left: {left}px; width: {width}px; height: {height}px; z-index: {z_index}; background-color: green; position: absolute;";
+    "top: {top}px; left: {left}px; width: {width}px; height: {height}px; z-index: {z_index}; background-color: green; position: absolute; overflow: hidden; border-radius: 5px;";
 
 pub(crate) fn setup() {
     let window = web_sys::window().unwrap();
