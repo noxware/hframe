@@ -61,6 +61,22 @@ impl Registry {
     }
 
     fn clip(&mut self, ctx: &egui::Context) {
+        ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot);
+
+        let screenshot = ctx.input(|i| {
+            for event in &i.raw.events {
+                if let egui::Event::Screenshot { image, .. } = event {
+                    return Some(image.clone());
+                }
+            }
+            None
+        });
+
+        let screenshot = match screenshot {
+            Some(screenshot) => screenshot,
+            None => return,
+        };
+
         ctx.memory(|mem| {
             let sorted_awares = mem
                 .layer_ids()
@@ -76,7 +92,7 @@ impl Registry {
 
             for (index, (id, rect)) in sorted_awares.enumerate() {
                 let z_index = (index * 3) as i64;
-                canvas_overlay::create_or_update_overlay(id, rect, z_index);
+                canvas_overlay::create_or_update_overlay(&screenshot, id, rect, z_index);
 
                 if let Some(hframe) = self
                     .hframes

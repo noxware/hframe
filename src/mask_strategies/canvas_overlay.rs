@@ -65,8 +65,7 @@ fn get_egui_canvas() -> web_sys::HtmlCanvasElement {
     canvas.dyn_into::<web_sys::HtmlCanvasElement>().unwrap()
 }
 
-fn capture_rect_into_overlay(id: egui::Id, rect: egui::Rect) {
-    let egui_canvas = get_egui_canvas();
+fn capture_rect_into_overlay(screenshot: &egui::ColorImage, id: egui::Id, rect: egui::Rect) {
     let overlay_canvas = get_overlay_canvas(id);
     let overlay_context = overlay_canvas
         .get_context("2d")
@@ -80,25 +79,20 @@ fn capture_rect_into_overlay(id: egui::Id, rect: egui::Rect) {
     let sw = rect.width() as f64;
     let sh = rect.height() as f64;
 
-    let dw = sw;
-    let dh = sh;
+    // may panic!
+    let screenshot = screenshot.region(&rect, None);
+    let screenshot = screenshot.as_raw();
+
+    let clamped = web_sys::wasm_bindgen::Clamped(screenshot);
+    let image_data = web_sys::ImageData::new_with_u8_clamped_array(clamped, sw as u32).unwrap();
 
     overlay_context
-        .draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
-            &egui_canvas,
-            sx,
-            sy,
-            sw,
-            sh,
-            0.,
-            0.,
-            dw,
-            dh,
-        )
+        .put_image_data(&image_data, 0.0, 0.0)
         .unwrap();
 }
 
 pub(crate) fn create_or_update_overlay(
+    screenshot: &egui::ColorImage,
     egui_id: egui::Id,
     rect: egui::Rect,
     z_index: i64,
@@ -132,7 +126,7 @@ pub(crate) fn create_or_update_overlay(
 
     overlay.set_outer_html(&content);
 
-    capture_rect_into_overlay(egui_id, rect);
+    capture_rect_into_overlay(&screenshot, egui_id, rect);
 
     overlay
 }
