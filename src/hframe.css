@@ -1,7 +1,5 @@
 .hframe {
   position: absolute;
-  mask-mode: luminance;
-  -webkit-mask-mode: luminance;
 }
 
 .hframe > * {
@@ -11,10 +9,4 @@
   max-height: 100%;
   border: none;
   overflow: auto;
-}
-
-.hframe-mask-svg {
-  position: absolute;
-  width: 0;
-  height: 0;
 }

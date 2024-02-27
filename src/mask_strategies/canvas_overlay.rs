@@ -1,12 +1,17 @@
+use web_sys::wasm_bindgen::JsCast;
+
 const OVERLAYS_CONTAINER: &str = r#"
 <div id="overlays-container" style="position: absolute; top: 0; left: 0; width: 0; height: 0; overflow: visible; z-index: 100000; pointer-events: none;"></div>
 "#;
 
 const OVERLAY_TEMPLATE: &str = r#"
-<div id="{id}" class="hframe" style="{style}"></div>
+<div id="{id}" style="{style}">
+<canvas width="{width}" height="{height}"></canvas>
+</div>
 "#;
 
-const OVERLAY_STYLE_TEMPLATE: &str = "top: {top}px; left: {left}px; width: {width}px; height: {height}px; background-color: green; opacity: 0.5;";
+const OVERLAY_STYLE_TEMPLATE: &str =
+    "top: {top}px; left: {left}px; width: {width}px; height: {height}px; background-color: green; position: absolute;";
 
 pub(crate) fn setup() {
     let window = web_sys::window().unwrap();
@@ -46,18 +51,65 @@ fn get_overlay(id: egui::Id) -> web_sys::Element {
     try_get_overlay(id).unwrap()
 }
 
-pub(crate) fn create_or_update_overlay(id: egui::Id, rect: egui::Rect) -> web_sys::Element {
+fn get_overlay_canvas(id: egui::Id) -> web_sys::HtmlCanvasElement {
+    let overlay = get_overlay(id);
+    let canvas = overlay.query_selector("canvas").unwrap().unwrap();
+    canvas.dyn_into::<web_sys::HtmlCanvasElement>().unwrap()
+}
+
+fn get_egui_canvas() -> web_sys::HtmlCanvasElement {
+    let window = web_sys::window().unwrap();
+    let document = window.document().unwrap();
+    // TODO: Not guaranteed id.
+    let canvas = document.get_element_by_id("the_canvas_id").unwrap();
+    canvas.dyn_into::<web_sys::HtmlCanvasElement>().unwrap()
+}
+
+fn capture_rect_into_overlay(id: egui::Id, rect: egui::Rect) {
+    let egui_canvas = get_egui_canvas();
+    let overlay_canvas = get_overlay_canvas(id);
+    let overlay_context = overlay_canvas
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    let sx = rect.min.x as f64;
+    let sy = rect.min.y as f64;
+    let sw = rect.width() as f64;
+    let sh = rect.height() as f64;
+
+    let dw = sw;
+    let dh = sh;
+
+    overlay_context
+        .draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+            &egui_canvas,
+            sx,
+            sy,
+            sw,
+            sh,
+            0.,
+            0.,
+            dw,
+            dh,
+        )
+        .unwrap();
+}
+
+pub(crate) fn create_or_update_overlay(egui_id: egui::Id, rect: egui::Rect) -> web_sys::Element {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
     let container = get_container();
 
-    let overlay = try_get_overlay(id).unwrap_or_else(|| {
+    let overlay = try_get_overlay(egui_id).unwrap_or_else(|| {
         let overlay = document.create_element("div").unwrap();
         container.append_child(&overlay).unwrap();
         overlay
     });
 
-    let id = overlay_id(id);
+    let id = overlay_id(egui_id);
 
     let style = OVERLAY_STYLE_TEMPLATE
         .replace("{top}", &rect.min.y.to_string())
@@ -67,9 +119,14 @@ pub(crate) fn create_or_update_overlay(id: egui::Id, rect: egui::Rect) -> web_sy
 
     let content = OVERLAY_TEMPLATE
         .replace("{id}", &id)
-        .replace("{style}", &style);
+        .replace("{style}", &style)
+        .replace("{width}", &rect.width().to_string())
+        .replace("{height}", &rect.height().to_string());
 
     overlay.set_outer_html(&content);
+
+    capture_rect_into_overlay(egui_id, rect);
+
     overlay
 }
 

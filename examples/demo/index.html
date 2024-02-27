@@ -130,6 +130,11 @@
     <!-- the id is hardcoded in main.rs . so, make sure both match. -->
     <canvas id="the_canvas_id"></canvas>
 
+    <script>
+      document
+        .getElementById("the_canvas_id")
+        .getContext("webgl", { preserveDrawingBuffer: true });
+    </script>
     <!--Register Service Worker. this will cache the wasm / js scripts for offline use (for PWA functionality). -->
     <!-- Force refresh (Ctrl + F5) to load the latest files instead of cached files  -->
     <script>
