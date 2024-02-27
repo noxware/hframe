@@ -1,5 +1,3 @@
-use std::any::Any;
-
 /// Keeps track of the state of an HTML Window. Only relevant if you are playing
 /// with custom masking strategies (which is considered unstable).
 #[derive(Debug)]
@@ -12,7 +10,6 @@ pub struct HtmlWindowState {
     pub rect: egui::Rect,
     pub(crate) interactable: bool,
     pub(crate) visible: bool,
-    pub mask: Option<Box<dyn Any + Send>>,
     pub(crate) content_changed: bool,
 }
 
@@ -25,7 +22,6 @@ impl HtmlWindowState {
             rect: egui::Rect::ZERO,
             interactable: true,
             visible: true,
-            mask: None,
             content_changed: false,
         }
     }

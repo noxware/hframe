@@ -1,14 +1,13 @@
 use crate::aware::Awares;
-use crate::mask_strategies;
+use crate::mask_strategies::canvas_overlay;
 use crate::utils::{eid, sync_hframe, EguiCheap};
-use crate::{HtmlWindowState, MaskStrategy, MaskStrategyMeta};
+use crate::HtmlWindowState;
 use std::collections::HashSet;
 
 pub(crate) struct Registry {
     pub(crate) hframes: Vec<HtmlWindowState>,
     pub(crate) hframe_awares: Awares,
     pub(crate) hframes_since_last_sync: HashSet<String>,
-    mask_strategy: Box<dyn MaskStrategy>,
 }
 
 impl Default for Registry {
@@ -19,6 +18,9 @@ impl Default for Registry {
 
 impl Registry {
     fn new() -> Self {
+        // TODO: Move out of here maybe.
+        canvas_overlay::setup();
+
         let style = web_sys::window()
             .unwrap()
             .document()
@@ -44,15 +46,11 @@ impl Registry {
             .unwrap();
         }
 
-        let mut res = Self {
+        Self {
             hframes: Vec::new(),
             hframe_awares: Awares::default(),
             hframes_since_last_sync: HashSet::new(),
-            mask_strategy: Box::new(mask_strategies::Nop::new()),
-        };
-
-        res.set_mask_strategy(mask_strategies::Auto::new());
-        res
+        }
     }
 
     fn aware<R>(
@@ -76,7 +74,11 @@ impl Registry {
 
             let sorted_awares = sorted_awares.iter().rev().collect::<Vec<_>>();
 
-            for (index, (id, _rect)) in sorted_awares.iter().enumerate() {
+            for (id, rect) in sorted_awares.iter() {
+                canvas_overlay::create_or_update_overlay(*id, *rect);
+            }
+
+            /*for (index, (id, _rect)) in sorted_awares.iter().enumerate() {
                 if let Some(hframe) = self
                     .hframes
                     .iter_mut()
@@ -88,14 +90,14 @@ impl Registry {
                         .mask_strategy
                         .compute_mask(hframe, &mut overlaping_rects);
                 }
-            }
+            }*/
         });
     }
 
     fn sync(&mut self, ctx: &egui::Context) {
         self.clip(ctx);
         for state in &self.hframes {
-            sync_hframe(state, &*self.mask_strategy);
+            sync_hframe(state /*, &*self.mask_strategy*/);
         }
         self.clean();
     }
@@ -115,21 +117,6 @@ impl Registry {
         });
 
         self.hframes_since_last_sync.clear();
-    }
-
-    fn set_mask_strategy<M: MaskStrategy + 'static>(&mut self, mask_strategy: M) {
-        self.mask_strategy.cleanup();
-        for state in &mut self.hframes {
-            state.mask = None;
-            state.get_html_element().remove_attribute("style").unwrap();
-        }
-
-        self.mask_strategy = Box::new(mask_strategy);
-        self.mask_strategy.setup();
-    }
-
-    fn mask_strategy_meta(&self) -> MaskStrategyMeta {
-        self.mask_strategy.meta()
     }
 }
 
@@ -165,23 +152,6 @@ pub fn sync(ctx: &egui::Context) {
     let reg = get_or_insert_registry(ctx);
     let mut reg = reg.lock().unwrap();
     reg.sync(ctx);
-}
-
-/// Get the meta information of the masking strategy currently in use.
-///
-/// This is useful if you need to know which strategy is actually being used
-/// when using the `Auto` strategy.
-pub fn mask_strategy_meta(ctx: &egui::Context) -> MaskStrategyMeta {
-    let reg = get_or_insert_registry(ctx);
-    let reg = reg.lock().unwrap();
-    reg.mask_strategy_meta()
-}
-
-/// Allows you to set a specific mask strategy at runtime.
-pub fn set_mask_strategy<M: MaskStrategy + 'static>(ctx: &egui::Context, mask_strategy: M) {
-    let reg = get_or_insert_registry(ctx);
-    let mut reg = reg.lock().unwrap();
-    reg.set_mask_strategy(mask_strategy);
 }
 
 /// Allows you to implement `aware` for egui entities so hframe can know about

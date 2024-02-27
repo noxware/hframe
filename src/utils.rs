@@ -1,7 +1,7 @@
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
-use crate::{HtmlWindowState, MaskStrategy};
+use crate::HtmlWindowState;
 
 macro_rules! eid {
     ($id:expr) => {
@@ -17,7 +17,29 @@ pub(crate) fn rect_to_relative(rect: egui::Rect, parent: egui::Rect) -> egui::Re
     egui::Rect::from_min_max(min.to_pos2(), max.to_pos2())
 }
 
-pub(crate) fn sync_hframe(state: &HtmlWindowState, mask_strategy: &dyn MaskStrategy) {
+macro_rules! hframe_style {
+    ($state:expr) => {
+        format!(
+            "top: {}px; left: {}px; width: {}px; height: {}px; {}; {};",
+            $state.rect.min.y,
+            $state.rect.min.x,
+            $state.rect.width(),
+            $state.rect.height(),
+            if $state.interactable {
+                ""
+            } else {
+                "pointer-events: none;"
+            },
+            if $state.visible {
+                ""
+            } else {
+                "visibility: hidden;"
+            }
+        )
+    };
+}
+
+pub(crate) fn sync_hframe(state: &HtmlWindowState /*, mask_strategy: &dyn MaskStrategy*/) {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
 
@@ -34,7 +56,11 @@ pub(crate) fn sync_hframe(state: &HtmlWindowState, mask_strategy: &dyn MaskStrat
         element.set_inner_html(&state.content);
     }
 
-    mask_strategy.mask(state);
+    /*mask_strategy.mask(state);*/
+
+    let style = hframe_style!(state);
+    element.set_attribute("class", "hframe").unwrap();
+    element.set_attribute("style", &style).unwrap();
 }
 
 pub(crate) fn is_gecko() -> bool {
