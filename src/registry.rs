@@ -66,33 +66,32 @@ impl Registry {
     }
 
     fn clip(&mut self, ctx: &egui::Context) {
-        ctx.memory(|mem| {
-            let sorted_awares = mem
-                .layer_ids()
+        let sorted_awares = ctx.memory(|mem| {
+            mem.layer_ids()
                 .filter_map(|layer_id| {
                     self.hframe_awares
                         .0
                         .get(&layer_id.id)
                         .map(|aware| (layer_id.id, aware.rect))
                 })
-                .collect::<Vec<_>>();
-
-            let sorted_awares = sorted_awares.iter().rev().collect::<Vec<_>>();
-
-            for (index, (id, _rect)) in sorted_awares.iter().enumerate() {
-                if let Some(hframe) = self
-                    .hframes
-                    .iter_mut()
-                    .find(|hframe| eid!(&hframe.id) == *id)
-                {
-                    let prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
-                    let mut overlaping_rects = prev_rects.filter(|r| r.intersects(hframe.rect));
-                    hframe.mask =
-                        self.mask_strategy
-                            .compute_mask(ctx, hframe, &mut overlaping_rects);
-                }
-            }
+                .collect::<Vec<_>>()
         });
+
+        let sorted_awares = sorted_awares.iter().rev().collect::<Vec<_>>();
+
+        for (index, (id, _rect)) in sorted_awares.iter().enumerate() {
+            if let Some(hframe) = self
+                .hframes
+                .iter_mut()
+                .find(|hframe| eid!(&hframe.id) == *id)
+            {
+                let prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
+                let mut overlaping_rects = prev_rects.filter(|r| r.intersects(hframe.rect));
+                hframe.mask = self
+                    .mask_strategy
+                    .compute_mask(ctx, hframe, &mut overlaping_rects);
+            }
+        }
     }
 
     fn sync(&mut self, ctx: &egui::Context) {
