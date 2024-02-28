@@ -1,4 +1,8 @@
-use crate::{get_or_insert_registry, utils::eid, HtmlWindowState};
+use crate::{
+    get_or_insert_registry,
+    utils::egui::{eid, is_pointer_primary_down},
+    HtmlWindowState,
+};
 
 /// A window capable of displaying HTML content inside.
 ///
@@ -115,8 +119,7 @@ impl<'open> HtmlWindow<'open> {
         let shown_window = registry.hframe_awares.insert(shown_window);
 
         if let Some(shown_window) = shown_window {
-            state.interactable = ctx
-                .input(|i| !i.pointer.button_down(egui::PointerButton::Primary))
+            state.interactable = !is_pointer_primary_down(ctx)
                 && ctx.top_layer_id() == Some(shown_window.response.layer_id);
             state.visible = shown_window.inner.is_some();
             state.rect = shown_window.inner.unwrap_or(state.rect);

@@ -17,7 +17,7 @@ pub struct Auto {
 impl Auto {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        if utils::is_gecko() {
+        if utils::browser_detection::is_gecko() {
             Self {
                 inner: Box::new(DocumentMask::new()),
             }
@@ -46,10 +46,11 @@ impl MaskStrategy for Auto {
 
     fn compute_mask(
         &self,
+        ctx: &egui::Context,
         state: &HtmlWindowState,
         prev_rects: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any + Send>> {
-        self.inner.compute_mask(state, prev_rects)
+        self.inner.compute_mask(ctx, state, prev_rects)
     }
 
     fn mask(&self, state: &HtmlWindowState) {

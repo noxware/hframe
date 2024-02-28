@@ -49,6 +49,7 @@ impl MaskStrategy for Nop {
 
     fn compute_mask(
         &self,
+        _ctx: &egui::Context,
         _state: &HtmlWindowState,
         _prev_rects: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any + Send>> {

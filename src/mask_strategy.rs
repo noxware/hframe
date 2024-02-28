@@ -4,7 +4,7 @@ use crate::HtmlWindowState;
 
 /// Metadata used to describe a mask strategy.
 #[derive(Clone, Debug)]
-pub struct MaskStrategyMeta {
+pub(crate) struct MaskStrategyMeta {
     /// A identifiable name for the strategy.
     pub name: String,
 }
@@ -14,7 +14,7 @@ pub struct MaskStrategyMeta {
 /// unstable.
 ///
 /// Methods here may change in future versions.
-pub trait MaskStrategy: Send + Sync {
+pub(crate) trait MaskStrategy: Send + Sync {
     /// Anything that must be done when this strategy is set.
     fn setup(&self);
     /// Anything that must be done when this strategy is unset. For example,
@@ -33,6 +33,7 @@ pub trait MaskStrategy: Send + Sync {
     /// `WindowState`.
     fn compute_mask(
         &self,
+        ctx: &egui::Context,
         state: &HtmlWindowState,
         prev_rects: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any + Send>>;

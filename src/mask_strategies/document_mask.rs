@@ -1,4 +1,4 @@
-use crate::utils::rect_to_relative;
+use crate::utils::geometry::rect_to_relative;
 use crate::{
     html_window_state::HtmlWindowState,
     mask_strategy::{MaskStrategy, MaskStrategyMeta},
@@ -87,6 +87,7 @@ impl MaskStrategy for DocumentMask {
 
     fn compute_mask(
         &self,
+        _ctx: &egui::Context,
         hframe: &HtmlWindowState,
         holes: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any + Send>> {

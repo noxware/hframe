@@ -54,6 +54,7 @@ impl MaskStrategy for Hide {
 
     fn compute_mask(
         &self,
+        _ctx: &egui::Context,
         _hframe: &HtmlWindowState,
         holes: &mut dyn Iterator<Item = egui::Rect>,
     ) -> Option<Box<dyn Any + Send>> {

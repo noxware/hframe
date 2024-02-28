@@ -1,7 +1,10 @@
 use crate::aware::Awares;
 use crate::mask_strategies;
-use crate::utils::{eid, sync_hframe, EguiCheap};
-use crate::{HtmlWindowState, MaskStrategy, MaskStrategyMeta};
+use crate::utils::{
+    egui::{eid, EguiCheap},
+    sync_hframe,
+};
+use crate::{HtmlWindowState, MaskStrategy};
 use std::collections::HashSet;
 
 pub(crate) struct Registry {
@@ -84,9 +87,9 @@ impl Registry {
                 {
                     let prev_rects = sorted_awares[0..index].iter().map(|(_, rect)| *rect);
                     let mut overlaping_rects = prev_rects.filter(|r| r.intersects(hframe.rect));
-                    hframe.mask = self
-                        .mask_strategy
-                        .compute_mask(hframe, &mut overlaping_rects);
+                    hframe.mask =
+                        self.mask_strategy
+                            .compute_mask(ctx, hframe, &mut overlaping_rects);
                 }
             }
         });
@@ -127,10 +130,6 @@ impl Registry {
         self.mask_strategy = Box::new(mask_strategy);
         self.mask_strategy.setup();
     }
-
-    fn mask_strategy_meta(&self) -> MaskStrategyMeta {
-        self.mask_strategy.meta()
-    }
 }
 
 fn create_cheap_registry() -> EguiCheap<Registry> {
@@ -165,23 +164,6 @@ pub fn sync(ctx: &egui::Context) {
     let reg = get_or_insert_registry(ctx);
     let mut reg = reg.lock().unwrap();
     reg.sync(ctx);
-}
-
-/// Get the meta information of the masking strategy currently in use.
-///
-/// This is useful if you need to know which strategy is actually being used
-/// when using the `Auto` strategy.
-pub fn mask_strategy_meta(ctx: &egui::Context) -> MaskStrategyMeta {
-    let reg = get_or_insert_registry(ctx);
-    let reg = reg.lock().unwrap();
-    reg.mask_strategy_meta()
-}
-
-/// Allows you to set a specific mask strategy at runtime.
-pub fn set_mask_strategy<M: MaskStrategy + 'static>(ctx: &egui::Context, mask_strategy: M) {
-    let reg = get_or_insert_registry(ctx);
-    let mut reg = reg.lock().unwrap();
-    reg.set_mask_strategy(mask_strategy);
 }
 
 /// Allows you to implement `aware` for egui entities so hframe can know about
