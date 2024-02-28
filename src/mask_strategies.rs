@@ -5,11 +5,9 @@
 mod auto;
 mod data_mask;
 mod document_mask;
-mod hide;
 mod nop;
 
-pub use auto::Auto;
-pub use data_mask::DataMask;
-pub use document_mask::DocumentMask;
-pub use hide::Hide;
-pub use nop::Nop;
+pub(crate) use auto::Auto;
+pub(crate) use data_mask::DataMask;
+pub(crate) use document_mask::DocumentMask;
+pub(crate) use nop::Nop;

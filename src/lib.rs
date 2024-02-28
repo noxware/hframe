@@ -69,12 +69,12 @@
 mod aware;
 mod html_window;
 mod html_window_state;
-pub mod mask_strategies;
+pub(crate) mod mask_strategies;
 mod mask_strategy;
 mod registry;
 mod utils;
 
 pub use html_window::*;
-pub use html_window_state::*;
+pub(crate) use html_window_state::*;
 pub(crate) use mask_strategy::*;
 pub use registry::*;
