@@ -11,8 +11,7 @@ pub(crate) struct CompositionContext {
     // to make this weak.
     pub(crate) egui_ctx: egui::Context,
     composed_areas: Vec<ComposedArea>,
-    /// `dyn` to support setting a strategy at runtime or for plug & play
-    /// strategies during development.
+    /// `dyn` to support setting a strategy with a runtime criteria.
     composition_strategy: Option<Box<dyn CompositionStrategy>>,
 }
 
@@ -40,7 +39,7 @@ impl CompositionContext {
         Self {
             egui_ctx: egui_ctx.clone(),
             composed_areas: Vec::new(),
-            composition_strategy: Some(Box::new(composition_strategies::Nop::new())),
+            composition_strategy: Some(Box::new(composition_strategies::SvgDataMask::new())),
         }
     }
 
@@ -80,10 +79,40 @@ impl CompositionContext {
     }
 
     pub(crate) fn compose(&mut self) {
+        let layer_ids: Vec<_> = self.egui_ctx.memory(|mem| mem.layer_ids().collect());
+
+        let mut composed_areas = std::mem::take(&mut self.composed_areas);
+        self.composed_areas = layer_ids
+            .iter()
+            .filter_map(|layer_id| {
+                composed_areas
+                    .iter()
+                    .position(|area| area.id == layer_id.id)
+                    .map(|pos| composed_areas.swap_remove(pos))
+            })
+            .collect();
+
         if let Some(mut strategy) = self.composition_strategy.take() {
             strategy.compose(self);
             self.composition_strategy = Some(strategy);
         }
+    }
+
+    pub(crate) fn get_composed_areas(&self) -> &[ComposedArea] {
+        &self.composed_areas
+    }
+
+    /// Only safe to call in `compose` phase where the areas are known and
+    /// sorted.
+    pub(crate) fn get_composed_areas_on_top_of(&self, of: &ComposedArea) -> &[ComposedArea] {
+        let index = self
+            .composed_areas
+            .iter()
+            .position(|area| area.id == of.id)
+            .expect("The are is not known in this composition context");
+
+        // ???
+        &self.composed_areas[index + 1..]
     }
 }
 
