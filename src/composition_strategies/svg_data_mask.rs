@@ -33,13 +33,32 @@ impl CompositionStrategy for SvgDataMask {
                 continue;
             }
 
-            let area_rect = area.html.as_ref().unwrap().rect;
-            let holes = cmp
+            let window = web_sys::window().unwrap();
+            let document = window.document().unwrap();
+
+            let area_html = area.html.as_ref().unwrap();
+
+            let area_rect = area_html.rect;
+            let mut hole_rects = cmp
                 .get_composed_areas_on_top_of(area)
-                .map(|hole| utils::geometry::rect_to_relative(hole.rect, area_rect));
+                .map(|hole| utils::geometry::rect_to_relative(hole.rect, area_rect))
+                .peekable();
             let area_rect = utils::geometry::rect_to_relative(area_rect, area_rect);
 
-            let holes = holes
+            // Lazy detection of dragging.
+            let dragging = cmp
+                .egui_ctx
+                .input(|i: &egui::InputState| i.pointer.button_down(egui::PointerButton::Primary));
+
+            if dragging && hole_rects.peek().is_some() {
+                area_html
+                    .get_html_element()
+                    .style()
+                    .set_property("visibility", "hidden")
+                    .unwrap();
+            }
+
+            let holes = hole_rects
                 .map(|hole| {
                     HOLE_TEMPLATE
                         .replace("{x}", &hole.min.x.to_string())
@@ -56,8 +75,6 @@ impl CompositionStrategy for SvgDataMask {
 
             let encoded = format!("url(data:image/svg+xml,{})", urlencoding::encode(&svg));
 
-            let window = web_sys::window().unwrap();
-            let document = window.document().unwrap();
             let element = document
                 .get_element_by_id(&area.html.as_ref().unwrap().id)
                 .expect("Element to compose not found")
