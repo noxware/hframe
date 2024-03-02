@@ -104,15 +104,21 @@ impl CompositionContext {
 
     /// Only safe to call in `compose` phase where the areas are known and
     /// sorted.
-    pub(crate) fn get_composed_areas_on_top_of(&self, of: &ComposedArea) -> &[ComposedArea] {
+    pub(crate) fn get_composed_areas_on_top_of<'cmp>(
+        &'cmp self,
+        of: &'cmp ComposedArea,
+    ) -> impl Iterator<Item = &'cmp ComposedArea> + 'cmp {
         let index = self
             .composed_areas
             .iter()
             .position(|area| area.id == of.id)
             .expect("The are is not known in this composition context");
 
-        // ???
-        &self.composed_areas[index + 1..]
+        // This will also consider the non-HTML area part which may not be
+        // relevant for compositions, but makes this function generic.
+        self.composed_areas[index + 1..]
+            .iter()
+            .filter(|area| area.rect.intersects(of.rect))
     }
 }
 

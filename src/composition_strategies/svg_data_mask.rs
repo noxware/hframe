@@ -36,7 +36,6 @@ impl CompositionStrategy for SvgDataMask {
             let area_rect = area.html.as_ref().unwrap().rect;
             let holes = cmp
                 .get_composed_areas_on_top_of(area)
-                .iter()
                 .map(|hole| utils::geometry::rect_to_relative(hole.rect, area_rect));
             let area_rect = utils::geometry::rect_to_relative(area_rect, area_rect);
 
