@@ -1,4 +1,4 @@
-use crate::{utils, ComposedArea};
+use crate::{composition_strategies, utils, ComposedArea, CompositionStrategy};
 use std::{
     ops::Deref,
     sync::{Arc, Mutex},
@@ -11,6 +11,9 @@ pub(crate) struct CompositionContext {
     // to make this weak.
     pub(crate) egui_ctx: egui::Context,
     composed_areas: Vec<ComposedArea>,
+    /// `dyn` to support setting a strategy at runtime or for plug & play
+    /// strategies during development.
+    composition_strategy: Option<Box<dyn CompositionStrategy>>,
 }
 
 impl CompositionContext {
@@ -37,6 +40,7 @@ impl CompositionContext {
         Self {
             egui_ctx: egui_ctx.clone(),
             composed_areas: Vec::new(),
+            composition_strategy: Some(Box::new(composition_strategies::Nop::new())),
         }
     }
 
@@ -72,6 +76,13 @@ impl CompositionContext {
                     .set_attribute("style", &new_html.to_styles())
                     .unwrap();
             }
+        }
+    }
+
+    pub(crate) fn compose(&mut self) {
+        if let Some(mut strategy) = self.composition_strategy.take() {
+            strategy.compose(self);
+            self.composition_strategy = Some(strategy);
         }
     }
 }
@@ -114,4 +125,8 @@ pub(crate) fn get_composition_context(ctx: &egui::Context) -> WrappedComposition
     })
 }
 
-pub fn sync(_ctx: &egui::Context) {}
+pub fn sync(ctx: &egui::Context) {
+    let cmp = get_composition_context(ctx);
+    let mut cmp = cmp.lock().unwrap();
+    cmp.compose();
+}
