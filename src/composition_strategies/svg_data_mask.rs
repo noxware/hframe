@@ -50,7 +50,7 @@ impl CompositionStrategy for SvgDataMask {
                 .egui_ctx
                 .input(|i: &egui::InputState| i.pointer.button_down(egui::PointerButton::Primary));
 
-            if dragging && hole_rects.peek().is_some() {
+            if dragging && hole_rects.peek().is_some() && !utils::browser_detection::is_blink() {
                 area_html
                     .get_html_element()
                     .style()
