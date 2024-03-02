@@ -1,4 +1,6 @@
-use crate::{get_or_insert_registry, utils::eid, HtmlWindowState};
+use crate::{
+    get_composition_context, utils::egui::eid, ComposedArea, ComposedHtml, ComposedHtmlStatus,
+};
 
 /// A window capable of displaying HTML content inside.
 ///
@@ -64,9 +66,6 @@ impl<'open> HtmlWindow<'open> {
             open,
         } = self;
 
-        let registry = get_or_insert_registry(ctx);
-        let registry = &mut *registry.lock().unwrap();
-
         let open = if let Some(open) = open {
             if !*open {
                 return;
@@ -77,28 +76,9 @@ impl<'open> HtmlWindow<'open> {
             None
         };
 
-        registry.hframes_since_last_sync.insert(id.to_string());
+        // tel ctx to render html here
 
-        let state = registry.hframes.iter_mut().find(|state| state.id == id);
-        let state = match state {
-            Some(state) => state,
-            None => {
-                registry
-                    .hframes
-                    .push(HtmlWindowState::new(&id, &title, &content));
-                registry.hframes.last_mut().unwrap()
-            }
-        };
-
-        state.content_changed = state.content != content;
-
-        if state.content_changed {
-            state.content = content.to_string();
-        }
-
-        state.title = title.to_string();
-
-        let window = egui::Window::new(&state.title).id(eid!(&state.id));
+        let window = egui::Window::new(title).id(eid!(&id));
         let window = match open {
             Some(open) => window.open(open),
             None => window,
@@ -112,16 +92,30 @@ impl<'open> HtmlWindow<'open> {
             .rect
         });
 
-        let shown_window = registry.hframe_awares.insert(shown_window);
+        if let Some(inner_response) = shown_window {
+            let cmp = get_composition_context(ctx);
+            let cmp = &mut *cmp.lock().unwrap();
+            let ctx = &cmp.egui_ctx;
 
-        if let Some(shown_window) = shown_window {
-            state.interactable = ctx
+            let html_visible = inner_response.inner.is_some();
+            let html_rect = inner_response.inner.unwrap_or(egui::Rect::ZERO);
+            let html_interactive = ctx
                 .input(|i| !i.pointer.button_down(egui::PointerButton::Primary))
-                && ctx.top_layer_id() == Some(shown_window.response.layer_id);
-            state.visible = shown_window.inner.is_some();
-            state.rect = shown_window.inner.unwrap_or(state.rect);
-        } else {
-            state.visible = false;
+                && ctx.top_layer_id() == Some(inner_response.response.layer_id);
+
+            cmp.put_composed_area(ComposedArea {
+                id: inner_response.response.layer_id.id,
+                rect: inner_response.response.rect,
+                html: Some(ComposedHtml {
+                    id,
+                    content,
+                    rect: html_rect,
+                    status: ComposedHtmlStatus {
+                        interactive: html_interactive,
+                        visible: html_visible,
+                    },
+                }),
+            })
         }
     }
 }
