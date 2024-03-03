@@ -159,6 +159,21 @@ impl CompositionContext {
             .iter()
             .filter(|area| area.rect.intersects(of.rect))
     }
+
+    pub(crate) fn get_composed_area_being_dragged(&self) -> Option<&ComposedArea> {
+        let egui_ctx = &self.egui_ctx;
+        // Lazy detection of dragging.
+        let dragging = egui_ctx.input(|i| i.pointer.button_down(egui::PointerButton::Primary));
+
+        if !dragging {
+            return None;
+        }
+
+        let top_layer_id = egui_ctx.top_layer_id()?.id;
+        self.composed_areas
+            .iter()
+            .find(|area| area.id == top_layer_id)
+    }
 }
 
 impl Drop for CompositionContext {

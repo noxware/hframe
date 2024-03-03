@@ -51,19 +51,21 @@ impl CompositionStrategy for SvgDataMask {
                 continue;
             }
 
-            let window = web_sys::window().unwrap();
-            let document = window.document().unwrap();
-
             let area_html = area.html.as_ref().unwrap();
 
             let area_rect = area_html.rect;
-            let hole_rects: Vec<_> = cmp
-                .get_composed_areas_on_top_of(area)
+
+            let holes: Vec<_> = cmp.get_composed_areas_on_top_of(area).collect();
+
+            let hole_rects: Vec<_> = holes
+                .iter()
                 .map(|hole| utils::geometry::rect_to_relative(hole.rect, area_rect))
                 .collect();
             let area_rect = utils::geometry::rect_to_relative(area_rect, area_rect);
 
             let mask = compute_mask(area_rect, &hole_rects);
+
+            let document = web_sys::window().unwrap().document().unwrap();
 
             let element = document
                 .get_element_by_id(&area.html.as_ref().unwrap().id)
@@ -73,13 +75,11 @@ impl CompositionStrategy for SvgDataMask {
 
             let prev_mask = self.previous_masks.get(&area.id);
 
-            // Lazy detection of dragging.
-            let dragging = cmp
-                .egui_ctx
-                .input(|i: &egui::InputState| i.pointer.button_down(egui::PointerButton::Primary));
+            let area_being_dragged = cmp.get_composed_area_being_dragged();
+            let is_hole_being_dragged =
+                area_being_dragged.map_or(false, |a| holes.iter().any(|h| h.id == a.id));
 
-            if dragging
-                && !hole_rects.is_empty()
+            if is_hole_being_dragged
                 && !utils::browser_detection::is_blink()
                 && prev_mask != Some(&mask)
             {
