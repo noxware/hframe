@@ -214,6 +214,8 @@ pub(crate) fn get_composition_context(ctx: &egui::Context) -> WrappedComposition
     })
 }
 
+/// Syncs hframe internal stuff between the egui and web worlds. This function
+/// **must be always called** at the end of the update loop unconditionally.
 pub fn sync(ctx: &egui::Context) {
     let cmp = get_composition_context(ctx);
     let mut cmp = cmp.lock().unwrap();
