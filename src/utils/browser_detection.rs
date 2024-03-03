@@ -21,6 +21,7 @@ fn user_agent() -> String {
 // Chromium (Blink) example:
 // Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36
 
+#[allow(dead_code)]
 pub(crate) fn is_gecko() -> bool {
     let ua = user_agent();
 
