@@ -62,19 +62,17 @@
 //!   it is not scaled. The default configuration of the [eframe_template](https://github.com/emilk/eframe_template) will work.
 //! - Currently the API only provides a way to create egui windows with HTML "inside"
 //!   but doesn't provide a way to put bare HTML content in other places.
-//! - Multiple masking strategies are provided bacause all browsers have problems with
-//!   one or the other. The `Auto` strategy tries to guess the best one for the current
-//!   browser but it may choose a wrong strategy for unknown browsers.
 
 mod aware;
+mod composed_area;
+mod composition_context;
+pub(crate) mod composition_strategies;
+mod composition_strategy;
 mod html_window;
-mod html_window_state;
-pub mod mask_strategies;
-mod mask_strategy;
-mod registry;
-mod utils;
+pub(crate) mod utils;
 
+pub use aware::*;
+pub(crate) use composed_area::*;
+pub use composition_context::*;
+pub(crate) use composition_strategy::*;
 pub use html_window::*;
-pub use html_window_state::*;
-pub use mask_strategy::*;
-pub use registry::*;

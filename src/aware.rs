@@ -1,26 +1,28 @@
-use std::collections::HashMap;
+use crate::{get_composition_context, ComposedArea};
 
-#[derive(Debug)]
-pub(crate) struct Aware {
-    pub(crate) rect: egui::Rect,
+/// Allows you to implement `aware` for egui entities so hframe can know about
+/// their existence when applying compositions.
+pub trait Aware {
+    /// Let hframe know about the existence of this entity.
+    ///
+    /// You must call this in anything from the egui world that can overlap
+    /// with HTML content (like normal egui windows).
+    fn aware(self) -> Self;
 }
 
-#[derive(Default, Debug)]
-pub(crate) struct Awares(pub(crate) HashMap<egui::Id, Aware>);
+impl<R> Aware for Option<egui::InnerResponse<R>> {
+    fn aware(self) -> Self {
+        let inner_response = self?;
+        let egui_ctx = &inner_response.response.ctx;
+        let cmp = get_composition_context(egui_ctx);
+        let mut cmp = cmp.lock().unwrap();
 
-impl Awares {
-    pub(crate) fn insert<R>(
-        &mut self,
-        inner_response: Option<egui::InnerResponse<R>>,
-    ) -> Option<egui::InnerResponse<R>> {
-        let inner_response = inner_response?;
-        let response = &inner_response.response;
-        self.0.insert(
-            response.layer_id.id,
-            Aware {
-                rect: response.rect,
-            },
-        );
+        cmp.put_composed_area(ComposedArea {
+            id: inner_response.response.layer_id.id,
+            rect: inner_response.response.rect,
+            html: None,
+        });
+
         Some(inner_response)
     }
 }
