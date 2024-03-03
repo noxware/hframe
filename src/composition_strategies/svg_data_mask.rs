@@ -88,6 +88,11 @@ impl CompositionStrategy for SvgDataMask {
                     .style()
                     .set_property("visibility", "hidden")
                     .unwrap();
+
+                // Hack: Destroy the previous mask so it can't match again until
+                // drag stops. This is to prevent the hidden element from appearing
+                // if you move the dragged area to it's original position.
+                *self.previous_masks.get_mut(&area.id).unwrap() = "".into();
             } else {
                 let style = element.style();
                 style.set_property("mask", &mask).unwrap();
