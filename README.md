@@ -2,10 +2,15 @@
 
 Show HTML content "inside" your [egui](https://github.com/emilk/egui) rendered application. "hframe" stands for "HTML Frame".
 
-> **Note:** `hframe` only works when the application is compiled to WebAssembly and run in a browser. But you can still make a desktop up by leveraging [Tauri](https://tauri.app/).
+> **💡 Note:** `hframe` only works when the application is compiled to WebAssembly and run in a browser. But you can still make a desktop up by leveraging [Tauri](https://tauri.app/).
 >
 > [egui-tauri-template](https://github.com/noxware/egui-tauri-template)
 > will serve as good foundation if you need to target both platforms.
+
+> **⚠️ Warning:**: If you experience type mismatches, please ensure hframe is
+> using the same egui version you are using by checking your `Cargo.lock` file.
+> This errors may happen if you try to upgrade your egui version while hframe
+> is still using types from your older version.
 
 ## Simple example
 
