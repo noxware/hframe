@@ -1,4 +1,4 @@
-// use hframe::Aware;
+use hframe::Aware;
 
 const IFRAME: &str = r#"
 <iframe src="https://www.example.com/"></iframe>
@@ -52,35 +52,39 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::Window::new("None").show(ctx, |ui| {
-            ui.centered_and_justified(|ui| {
-                ui.label("Empty");
-            });
-        }); //.aware();
+        egui::Window::new("None")
+            .show(ctx, |ui| {
+                ui.centered_and_justified(|ui| {
+                    ui.label("Empty");
+                });
+            })
+            .aware();
 
-        egui::Window::new("Devtools").show(ctx, |ui| {
-            let video_toggle_text = if self.video_open {
-                "Force close video"
-            } else {
-                "Open video"
-            };
-            if ui.button(video_toggle_text).clicked() {
-                self.video_open = !self.video_open;
-            }
-            ui.horizontal(|ui| {
-                ui.label("Counter controls: ");
-                if ui.button("+").clicked() {
-                    self.count += 1;
+        egui::Window::new("Devtools")
+            .show(ctx, |ui| {
+                let video_toggle_text = if self.video_open {
+                    "Force close video"
+                } else {
+                    "Open video"
+                };
+                if ui.button(video_toggle_text).clicked() {
+                    self.video_open = !self.video_open;
                 }
-                if ui.button("-").clicked() {
-                    self.count -= 1;
-                }
-            });
-            ui.horizontal(|ui| {
-                egui::warn_if_debug_build(ui);
-                egui::widgets::global_dark_light_mode_buttons(ui);
-            });
-        }); //.aware();
+                ui.horizontal(|ui| {
+                    ui.label("Counter controls: ");
+                    if ui.button("+").clicked() {
+                        self.count += 1;
+                    }
+                    if ui.button("-").clicked() {
+                        self.count -= 1;
+                    }
+                });
+                ui.horizontal(|ui| {
+                    egui::warn_if_debug_build(ui);
+                    egui::widgets::global_dark_light_mode_buttons(ui);
+                });
+            })
+            .aware();
 
         hframe::HtmlWindow::new("Web Counter")
             .content(&COUNTER_TEMPLATE.replace("{count}", &self.count.to_string()))
