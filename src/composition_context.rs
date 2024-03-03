@@ -1,5 +1,6 @@
 use crate::{composition_strategies, utils, ComposedArea, CompositionStrategy};
 use std::{
+    collections::HashSet,
     ops::Deref,
     sync::{Arc, Mutex},
 };
@@ -12,6 +13,7 @@ pub(crate) struct CompositionContext {
     // to make this weak.
     pub(crate) egui_ctx: egui::Context,
     composed_areas: Vec<ComposedArea>,
+    composed_areas_since_last_sync: HashSet<egui::Id>,
     /// `dyn` to support setting a strategy with a runtime criteria.
     composition_strategy: Option<Box<dyn CompositionStrategy>>,
 }
@@ -48,12 +50,14 @@ impl CompositionContext {
         Self {
             egui_ctx: egui_ctx.clone(),
             composed_areas: Vec::new(),
+            composed_areas_since_last_sync: HashSet::new(),
             composition_strategy: Some(composition_strategy),
         }
     }
 
     pub(crate) fn put_composed_area(&mut self, area: ComposedArea) {
         let (new, prev) = utils::vec::insert_or_replace(&mut self.composed_areas, area, |a| a.id);
+        self.composed_areas_since_last_sync.insert(new.id);
 
         if let Some(new_html) = &new.html {
             let did_content_change = prev
@@ -87,7 +91,25 @@ impl CompositionContext {
         }
     }
 
-    pub(crate) fn compose(&mut self) {
+    fn purge_composed_areas(&mut self) {
+        self.composed_areas.retain(|a| {
+            if !self.composed_areas_since_last_sync.contains(&a.id) {
+                if let Some(html) = &a.html {
+                    let window = web_sys::window().unwrap();
+                    let document = window.document().unwrap();
+                    let element = document.get_element_by_id(&html.id).unwrap();
+                    element.remove();
+                }
+                false
+            } else {
+                true
+            }
+        });
+
+        self.composed_areas_since_last_sync.clear();
+    }
+
+    fn sort_composed_areas(&mut self) {
         let layer_ids: Vec<_> = self.egui_ctx.memory(|mem| mem.layer_ids().collect());
 
         let mut composed_areas = std::mem::take(&mut self.composed_areas);
@@ -100,11 +122,19 @@ impl CompositionContext {
                     .map(|pos| composed_areas.swap_remove(pos))
             })
             .collect();
+    }
 
+    fn compose(&mut self) {
         if let Some(mut strategy) = self.composition_strategy.take() {
             strategy.compose(self);
             self.composition_strategy = Some(strategy);
         }
+    }
+
+    pub(crate) fn sync(&mut self) {
+        self.purge_composed_areas();
+        self.sort_composed_areas();
+        self.compose();
     }
 
     pub(crate) fn get_composed_areas(&self) -> &[ComposedArea] {
@@ -172,5 +202,5 @@ pub(crate) fn get_composition_context(ctx: &egui::Context) -> WrappedComposition
 pub fn sync(ctx: &egui::Context) {
     let cmp = get_composition_context(ctx);
     let mut cmp = cmp.lock().unwrap();
-    cmp.compose();
+    cmp.sync();
 }
