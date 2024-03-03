@@ -1,6 +1,6 @@
 [package]
 name = "hframe"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 rust-version = "1.73"
 description = "Show HTML content \"inside\" your egui rendered application"
@@ -9,7 +9,7 @@ documentation = "https://docs.rs/hframe"
 repository = "https://github.com/noxware/hframe"
 
 [dependencies]
-egui = "0.25.0"
+egui = ">=0.25.0, <1.0.0"
 urlencoding = "2.1.3"
 wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3.67", features = [
