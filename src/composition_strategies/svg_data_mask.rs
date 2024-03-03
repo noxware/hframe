@@ -27,6 +27,10 @@ impl SvgDataMask {
 }
 
 impl CompositionStrategy for SvgDataMask {
+    fn name(&self) -> &'static str {
+        "svg_data_mask"
+    }
+
     fn compose(&mut self, cmp: &mut CompositionContext) {
         for area in cmp.get_composed_areas() {
             if area.html.is_none() {

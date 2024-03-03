@@ -3,6 +3,7 @@ use std::{
     ops::Deref,
     sync::{Arc, Mutex},
 };
+use web_sys::wasm_bindgen::JsValue;
 
 const GLOBAL_STYLES_ID: &str = "hframe-global-styles";
 
@@ -36,10 +37,18 @@ impl CompositionContext {
                 .unwrap();
         }
 
+        let composition_strategy: Box<dyn CompositionStrategy> =
+            Box::new(composition_strategies::SvgDataMask::new());
+
+        web_sys::console::debug_2(
+            &JsValue::from("Using composition strategy:"),
+            &JsValue::from(composition_strategy.name()),
+        );
+
         Self {
             egui_ctx: egui_ctx.clone(),
             composed_areas: Vec::new(),
-            composition_strategy: Some(Box::new(composition_strategies::SvgDataMask::new())),
+            composition_strategy: Some(composition_strategy),
         }
     }
 
