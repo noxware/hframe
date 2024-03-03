@@ -1,6 +1,6 @@
-use web_sys::wasm_bindgen::JsCast;
-
 use crate::{utils, CompositionContext, CompositionStrategy};
+use std::collections::{HashMap, HashSet};
+use web_sys::wasm_bindgen::JsCast;
 
 const MASK_TEMPLATE: &str = r#"
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
@@ -17,12 +17,24 @@ const MASK_TEMPLATE: &str = r#"
 const HOLE_TEMPLATE: &str =
     r#"<rect x="{x}" y="{y}" width="{width}" height="{height}" rx="5" fill="black" />"#;
 
-pub(crate) struct SvgDataMask;
+pub(crate) struct SvgDataMask {
+    // Reading the previous mask directly from the element is not safe since hframe
+    // can clean styles between cycles. That's why we must keep track of the previous
+    // values manually.
+    previous_masks: HashMap<egui::Id, String>,
+}
 
 impl SvgDataMask {
     #[allow(clippy::new_without_default)]
     pub(crate) fn new() -> Self {
-        Self
+        Self {
+            previous_masks: HashMap::new(),
+        }
+    }
+
+    fn purge_previous_masks(&mut self, cmp: &CompositionContext) {
+        let current_ids: HashSet<_> = cmp.get_composed_areas().iter().map(|a| a.id).collect();
+        self.previous_masks.retain(|id, _| current_ids.contains(id));
     }
 }
 
@@ -32,6 +44,8 @@ impl CompositionStrategy for SvgDataMask {
     }
 
     fn compose(&mut self, cmp: &mut CompositionContext) {
+        // Clean tracking garbage to avoid memory leaks.
+        self.purge_previous_masks(cmp);
         for area in cmp.get_composed_areas() {
             if area.html.is_none() {
                 continue;
@@ -43,41 +57,13 @@ impl CompositionStrategy for SvgDataMask {
             let area_html = area.html.as_ref().unwrap();
 
             let area_rect = area_html.rect;
-            let mut hole_rects = cmp
+            let hole_rects: Vec<_> = cmp
                 .get_composed_areas_on_top_of(area)
                 .map(|hole| utils::geometry::rect_to_relative(hole.rect, area_rect))
-                .peekable();
+                .collect();
             let area_rect = utils::geometry::rect_to_relative(area_rect, area_rect);
 
-            // Lazy detection of dragging.
-            let dragging = cmp
-                .egui_ctx
-                .input(|i: &egui::InputState| i.pointer.button_down(egui::PointerButton::Primary));
-
-            if dragging && hole_rects.peek().is_some() && !utils::browser_detection::is_blink() {
-                area_html
-                    .get_html_element()
-                    .style()
-                    .set_property("visibility", "hidden")
-                    .unwrap();
-            }
-
-            let holes = hole_rects
-                .map(|hole| {
-                    HOLE_TEMPLATE
-                        .replace("{x}", &hole.min.x.to_string())
-                        .replace("{y}", &hole.min.y.to_string())
-                        .replace("{width}", &hole.width().to_string())
-                        .replace("{height}", &hole.height().to_string())
-                })
-                .collect::<String>();
-
-            let svg = MASK_TEMPLATE
-                .replace("{width}", &area_rect.width().to_string())
-                .replace("{height}", &area_rect.height().to_string())
-                .replace("{holes}", &holes);
-
-            let encoded = format!("url(data:image/svg+xml,{})", urlencoding::encode(&svg));
+            let mask = compute_mask(area_rect, &hole_rects);
 
             let element = document
                 .get_element_by_id(&area.html.as_ref().unwrap().id)
@@ -85,9 +71,49 @@ impl CompositionStrategy for SvgDataMask {
                 .dyn_into::<web_sys::HtmlElement>()
                 .unwrap();
 
-            let style = element.style();
-            style.set_property("mask", &encoded).unwrap();
-            style.set_property("-webkit-mask", &encoded).unwrap();
+            let prev_mask = self.previous_masks.get(&area.id);
+
+            // Lazy detection of dragging.
+            let dragging = cmp
+                .egui_ctx
+                .input(|i: &egui::InputState| i.pointer.button_down(egui::PointerButton::Primary));
+
+            if dragging
+                && !hole_rects.is_empty()
+                && !utils::browser_detection::is_blink()
+                && prev_mask != Some(&mask)
+            {
+                area_html
+                    .get_html_element()
+                    .style()
+                    .set_property("visibility", "hidden")
+                    .unwrap();
+            } else {
+                let style = element.style();
+                style.set_property("mask", &mask).unwrap();
+                style.set_property("-webkit-mask", &mask).unwrap();
+                self.previous_masks.insert(area.id, mask);
+            }
         }
     }
+}
+
+fn compute_mask(area_rect: egui::Rect, hole_rects: &[egui::Rect]) -> String {
+    let holes = hole_rects
+        .iter()
+        .map(|hole| {
+            HOLE_TEMPLATE
+                .replace("{x}", &hole.min.x.to_string())
+                .replace("{y}", &hole.min.y.to_string())
+                .replace("{width}", &hole.width().to_string())
+                .replace("{height}", &hole.height().to_string())
+        })
+        .collect::<String>();
+
+    let svg = MASK_TEMPLATE
+        .replace("{width}", &area_rect.width().to_string())
+        .replace("{height}", &area_rect.height().to_string())
+        .replace("{holes}", &holes);
+
+    format!("url(data:image/svg+xml,{})", urlencoding::encode(&svg))
 }
