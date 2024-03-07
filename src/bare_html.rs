@@ -5,6 +5,10 @@ use crate::{
 
 /// A widget to display HTML content anywhere, without the need of a window.
 ///
+/// Similar to HtmlWindow, if this builder is not called in the current update call,
+/// the associated HTML content will be destroyed. But HtmlWindow supports window minimization
+/// without this limitation.
+///  
 /// Note: `hframe` is automatically aware of this widget.
 pub struct BareHtml {
     pub(crate) id: String,
