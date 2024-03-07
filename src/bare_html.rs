@@ -33,6 +33,12 @@ impl egui::Widget for &mut BareHtml {
             })
             .response;
 
+        let egui_ctx = ui.ctx();
+
+        // TODO: DRY this.
+        let interactive = egui_ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary))
+            && egui_ctx.top_layer_id() == Some(response.layer_id);
+
         let cmp = get_composition_context(&ui.ctx());
         let cmp = &mut *cmp.lock().unwrap();
 
@@ -44,7 +50,7 @@ impl egui::Widget for &mut BareHtml {
                 content: self.content.clone(),
                 rect: response.rect,
                 status: ComposedHtmlStatus {
-                    interactive: true,
+                    interactive,
                     visible: true,
                 },
             }),
