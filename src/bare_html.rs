@@ -1,5 +1,6 @@
 use crate::{
-    get_composition_context, utils::egui::eid, ComposedArea, ComposedHtml, ComposedHtmlStatus,
+    get_composition_context, utils::egui::eid, ComposedArea, ComposedAreaId, ComposedHtml,
+    ComposedHtmlStatus,
 };
 
 /// A widget to display HTML content anywhere, without the need of a window.
@@ -41,9 +42,7 @@ impl egui::Widget for &mut BareHtml {
         );
 
         cmp.put_composed_area(ComposedArea {
-            // This doesn't work because is the id of the window which was also
-            // awared as a non HTML area.
-            id: response.layer_id.id,
+            id: ComposedAreaId::new(response.layer_id, eid!(&self.id)),
             rect: response.rect,
             html: Some(ComposedHtml {
                 id: self.id.clone(),

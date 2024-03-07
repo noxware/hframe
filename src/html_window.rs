@@ -1,5 +1,6 @@
 use crate::{
-    get_composition_context, utils::egui::eid, ComposedArea, ComposedHtml, ComposedHtmlStatus,
+    get_composition_context, utils::egui::eid, ComposedArea, ComposedAreaId, ComposedHtml,
+    ComposedHtmlStatus,
 };
 
 /// A window capable of displaying HTML content inside.
@@ -104,7 +105,7 @@ impl<'open> HtmlWindow<'open> {
                 && ctx.top_layer_id() == Some(inner_response.response.layer_id);
 
             cmp.put_composed_area(ComposedArea {
-                id: inner_response.response.layer_id.id,
+                id: ComposedAreaId::new(inner_response.response.layer_id, egui::Id::NULL),
                 rect: inner_response.response.rect,
                 html: Some(ComposedHtml {
                     id,

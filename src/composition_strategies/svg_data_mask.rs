@@ -1,4 +1,4 @@
-use crate::{utils, CompositionContext, CompositionStrategy};
+use crate::{utils, ComposedAreaId, CompositionContext, CompositionStrategy};
 use std::collections::{HashMap, HashSet};
 use web_sys::wasm_bindgen::JsCast;
 
@@ -21,7 +21,7 @@ pub(crate) struct SvgDataMask {
     // Reading the previous mask directly from the element is not safe since hframe
     // can clean styles between cycles. That's why we must keep track of the previous
     // values manually.
-    previous_masks: HashMap<egui::Id, String>,
+    previous_masks: HashMap<ComposedAreaId, String>,
 }
 
 impl SvgDataMask {
