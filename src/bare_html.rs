@@ -43,7 +43,7 @@ impl egui::Widget for &mut BareHtml {
         let interactive = egui_ctx.input(|i| !i.pointer.button_down(egui::PointerButton::Primary))
             && egui_ctx.top_layer_id() == Some(response.layer_id);
 
-        let cmp = get_composition_context(&ui.ctx());
+        let cmp = get_composition_context(ui.ctx());
         let cmp = &mut *cmp.lock().unwrap();
 
         cmp.put_composed_area(ComposedArea {
