@@ -36,11 +36,6 @@ impl egui::Widget for &mut BareHtml {
         let cmp = get_composition_context(&ui.ctx());
         let cmp = &mut *cmp.lock().unwrap();
 
-        web_sys::console::debug_2(
-            &web_sys::wasm_bindgen::JsValue::from("> bare layer id"),
-            &web_sys::wasm_bindgen::JsValue::from(&response.layer_id.id.short_debug_format()),
-        );
-
         cmp.put_composed_area(ComposedArea {
             id: ComposedAreaId::new(response.layer_id, eid!(&self.id)),
             rect: response.rect,
