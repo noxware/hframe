@@ -91,11 +91,6 @@ impl eframe::App for App {
             .open(&mut self.counter_open)
             .show(ctx);
 
-        hframe::HtmlWindow::new("Iframe")
-            .content(IFRAME)
-            .open(&mut self.iframe_open)
-            .show(ctx);
-
         if self.video_open {
             hframe::HtmlWindow::new("Video").content(VIDEO).show(ctx);
         }
@@ -104,6 +99,13 @@ impl eframe::App for App {
             .content(YT)
             .open(&mut self.yt_open)
             .show(ctx);
+
+        egui::Window::new("Iframe Browser")
+            .open(&mut self.iframe_open)
+            .show(ctx, |ui| {
+                ui.add(hframe::BareHtml::new("iframe_browser").content(IFRAME));
+            })
+            .aware();
 
         hframe::sync(ctx);
     }
