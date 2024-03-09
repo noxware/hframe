@@ -1,3 +1,5 @@
+use hframe::Aware;
+
 const INITIAL_MARKDOWN: &str = r#"
 # Hello
 
@@ -28,18 +30,28 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::SidePanel::right("render_panel").show(ctx, |ui| {
-            let md = comrak::markdown_to_html(&self.markdown_input, &comrak::Options::default());
-            let html = format!("<div style=\"font-family: sans-serif;\">{}</div>", md);
-            ui.add(hframe::BareHtml::new("render_html").content(&html));
+        egui::CentralPanel::default().show(ctx, |ui| {
+            let full_height = ui.available_height();
+            let half_width = ui.available_width() / 2.0;
+
+            ui.horizontal(|ui| {
+                ui.add_sized(
+                    [half_width, full_height],
+                    egui::TextEdit::multiline(&mut self.markdown_input),
+                );
+
+                let html =
+                    comrak::markdown_to_html(&self.markdown_input, &comrak::Options::default());
+                let styled_html = format!("<div style=\"font-family: sans-serif;\">{}</div>", html);
+                let html_widget = hframe::BareHtml::new("render_html").content(&styled_html);
+
+                ui.add_sized([half_width, full_height], html_widget);
+            });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.add_sized(
-                ui.available_size(),
-                egui::TextEdit::multiline(&mut self.markdown_input),
-            )
-        });
+        egui::Window::new("Style")
+            .show(ctx, |ui| egui::widgets::global_dark_light_mode_buttons(ui))
+            .aware();
 
         hframe::sync(ctx);
     }
