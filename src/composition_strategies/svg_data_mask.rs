@@ -52,10 +52,24 @@ impl CompositionStrategy for SvgDataMask {
             }
 
             let area_html = area.html.as_ref().unwrap();
-
-            let area_rect = area_html.rect;
+            let document = web_sys::window().unwrap().document().unwrap();
+            let element = document
+                .get_element_by_id(&area_html.id)
+                .expect("Element to compose not found")
+                .dyn_into::<web_sys::HtmlElement>()
+                .unwrap();
+            let style = element.style();
 
             let holes: Vec<_> = cmp.get_composed_areas_on_top_of(area).collect();
+
+            // Do not apply a mask if there are no holes.
+            if holes.is_empty() {
+                style.remove_property("mask").unwrap();
+                style.remove_property("-webkit-mask").unwrap();
+                continue;
+            }
+
+            let area_rect = area_html.rect;
 
             let hole_rects: Vec<_> = holes
                 .iter()
@@ -64,14 +78,6 @@ impl CompositionStrategy for SvgDataMask {
             let area_rect = utils::geometry::rect_to_relative(area_rect, area_rect);
 
             let mask = compute_mask(area_rect, &hole_rects);
-
-            let document = web_sys::window().unwrap().document().unwrap();
-
-            let element = document
-                .get_element_by_id(&area.html.as_ref().unwrap().id)
-                .expect("Element to compose not found")
-                .dyn_into::<web_sys::HtmlElement>()
-                .unwrap();
 
             let prev_mask = self.previous_masks.get(&area.id);
 
@@ -94,7 +100,6 @@ impl CompositionStrategy for SvgDataMask {
                 // if you move the dragged area to it's original position.
                 *self.previous_masks.get_mut(&area.id).unwrap() = "".into();
             } else {
-                let style = element.style();
                 style.set_property("mask", &mask).unwrap();
                 style.set_property("-webkit-mask", &mask).unwrap();
                 self.previous_masks.insert(area.id, mask);
