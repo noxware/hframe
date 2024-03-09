@@ -1,6 +1,6 @@
-use crate::{composition_strategies, utils, ComposedArea, CompositionStrategy};
+use crate::{composition_strategies, utils, ComposedArea, ComposedAreaId, CompositionStrategy};
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     ops::Deref,
     sync::{Arc, Mutex},
 };
@@ -13,7 +13,7 @@ pub(crate) struct CompositionContext {
     // to make this weak.
     pub(crate) egui_ctx: egui::Context,
     composed_areas: Vec<ComposedArea>,
-    composed_areas_since_last_sync: HashSet<egui::Id>,
+    composed_areas_since_last_sync: HashSet<ComposedAreaId>,
     /// `dyn` to support setting a strategy with a runtime criteria.
     composition_strategy: Option<Box<dyn CompositionStrategy>>,
 }
@@ -110,18 +110,25 @@ impl CompositionContext {
     }
 
     fn sort_composed_areas(&mut self) {
-        let layer_ids: Vec<_> = self.egui_ctx.memory(|mem| mem.layer_ids().collect());
+        let layer_ids: HashMap<egui::LayerId, usize> = self
+            .egui_ctx
+            .memory(|mem| mem.layer_ids().enumerate().map(|(i, l)| (l, i)).collect());
 
-        let mut composed_areas = std::mem::take(&mut self.composed_areas);
-        self.composed_areas = layer_ids
-            .iter()
-            .filter_map(|layer_id| {
-                composed_areas
-                    .iter()
-                    .position(|area| area.id == layer_id.id)
-                    .map(|pos| composed_areas.swap_remove(pos))
-            })
-            .collect();
+        self.composed_areas.sort_by(|a0, a1| {
+            if a0.id.layer_id != a1.id.layer_id {
+                return layer_ids[&a0.id.layer_id].cmp(&layer_ids[&a1.id.layer_id]);
+            }
+
+            if a0.id.widget_id == egui::Id::NULL {
+                return std::cmp::Ordering::Less;
+            }
+
+            if a1.id.widget_id == egui::Id::NULL {
+                return std::cmp::Ordering::Greater;
+            }
+
+            std::cmp::Ordering::Equal
+        });
     }
 
     fn compose(&mut self) {
@@ -169,10 +176,10 @@ impl CompositionContext {
             return None;
         }
 
-        let top_layer_id = egui_ctx.top_layer_id()?.id;
+        let top_layer_id = egui_ctx.top_layer_id()?;
         self.composed_areas
             .iter()
-            .find(|area| area.id == top_layer_id)
+            .find(|area| area.id.layer_id == top_layer_id && area.id.widget_id == egui::Id::NULL)
     }
 }
 

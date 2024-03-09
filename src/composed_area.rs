@@ -1,9 +1,25 @@
 use web_sys::wasm_bindgen::JsCast;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct ComposedAreaId {
+    pub(crate) layer_id: egui::LayerId,
+    /// An arbitrary subid to differentiate widgets in the same layer.
+    /// This is NULL for windows to differentiate them from widgets inside windows.
+    pub(crate) widget_id: egui::Id,
+}
+
+impl ComposedAreaId {
+    pub(crate) fn new(layer_id: egui::LayerId, widget_id: egui::Id) -> Self {
+        Self {
+            layer_id,
+            widget_id,
+        }
+    }
+}
+
 pub(crate) struct ComposedArea {
-    /// The egui id used to track this area. It should be a LayerId's id, not a
-    /// widget id.
-    pub(crate) id: egui::Id,
+    /// An id used to track this area.
+    pub(crate) id: ComposedAreaId,
     /// Whole rect of the egui rendered area.
     pub(crate) rect: egui::Rect,
     pub(crate) html: Option<ComposedHtml>,
