@@ -95,10 +95,10 @@ impl CompositionStrategy for SvgDataMask {
                     .set_property("visibility", "hidden")
                     .unwrap();
 
-                // Hack: Destroy the previous mask so it can't match again until
+                // Destroy the previous mask so it can't match again until
                 // drag stops. This is to prevent the hidden element from appearing
                 // if you move the dragged area to it's original position.
-                *self.previous_masks.get_mut(&area.id).unwrap() = "".into();
+                self.previous_masks.remove(&area.id);
             } else {
                 style.set_property("mask", &mask).unwrap();
                 style.set_property("-webkit-mask", &mask).unwrap();
