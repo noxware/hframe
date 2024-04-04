@@ -1,4 +1,4 @@
-use crate::{get_composition_context, ComposedArea};
+use crate::{get_composition_context, ComposedArea, ComposedAreaId};
 
 /// Allows you to implement `aware` for egui entities so hframe can know about
 /// their existence when applying compositions.
@@ -18,7 +18,7 @@ impl<R> Aware for Option<egui::InnerResponse<R>> {
         let mut cmp = cmp.lock().unwrap();
 
         cmp.put_composed_area(ComposedArea {
-            id: inner_response.response.layer_id.id,
+            id: ComposedAreaId::new(inner_response.response.layer_id, egui::Id::NULL),
             rect: inner_response.response.rect,
             html: None,
         });

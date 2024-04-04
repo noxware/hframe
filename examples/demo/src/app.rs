@@ -1,8 +1,10 @@
 use hframe::Aware;
 
-const IFRAME: &str = r#"
-<iframe src="https://www.example.com/"></iframe>
+const IFRAME_TEMPLATE: &str = r#"
+<iframe src="{src}"></iframe>
 "#;
+
+const IFRAME_INITIAL_URL: &str = "https://www.example.com/";
 
 const VIDEO: &str = r#"
 <video controls>
@@ -25,6 +27,8 @@ const COUNTER_TEMPLATE: &str = r#"
 #[derive(Default)]
 pub struct App {
     counter_open: bool,
+    iframe_current_url: String,
+    iframe_url_input: String,
     iframe_open: bool,
     yt_open: bool,
     count: i32,
@@ -43,6 +47,8 @@ impl App {
         Self {
             video_open: true,
             counter_open: true,
+            iframe_current_url: IFRAME_INITIAL_URL.into(),
+            iframe_url_input: IFRAME_INITIAL_URL.into(),
             iframe_open: true,
             yt_open: true,
             ..Default::default()
@@ -91,11 +97,6 @@ impl eframe::App for App {
             .open(&mut self.counter_open)
             .show(ctx);
 
-        hframe::HtmlWindow::new("Iframe")
-            .content(IFRAME)
-            .open(&mut self.iframe_open)
-            .show(ctx);
-
         if self.video_open {
             hframe::HtmlWindow::new("Video").content(VIDEO).show(ctx);
         }
@@ -104,6 +105,22 @@ impl eframe::App for App {
             .content(YT)
             .open(&mut self.yt_open)
             .show(ctx);
+
+        egui::Window::new("Iframe Browser")
+            .open(&mut self.iframe_open)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    ui.text_edit_singleline(&mut self.iframe_url_input);
+                    if ui.button("Go").clicked() {
+                        self.iframe_current_url = self.iframe_url_input.clone();
+                    }
+                });
+                ui.add(
+                    hframe::BareHtml::new("iframe_browser")
+                        .content(&IFRAME_TEMPLATE.replace("{src}", &self.iframe_current_url)),
+                );
+            })
+            .aware();
 
         hframe::sync(ctx);
     }
