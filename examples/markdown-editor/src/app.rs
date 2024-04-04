@@ -1,12 +1,12 @@
 use hframe::Aware;
 
 const INITIAL_MARKDOWN: &str = r#"
-# Hello
+# Kiryu & Majima Dancing
 
-![comrak author gh profile picture](https://avatars.githubusercontent.com/u/1915?v=4)
+<iframe width="640" height="360" src="https://www.youtube.com/embed/qKWRUpYvFzY" title="Friday Night -- Yakuza 0 -- 1 hour" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-- World
-    - !!!
+- Amazing
+    - Characters
 "#;
 
 pub struct App {
@@ -40,8 +40,10 @@ impl eframe::App for App {
                     egui::TextEdit::multiline(&mut self.markdown_input),
                 );
 
-                let html =
-                    comrak::markdown_to_html(&self.markdown_input, &comrak::Options::default());
+                let mut options = comrak::Options::default();
+                options.render.unsafe_ = true;
+
+                let html = comrak::markdown_to_html(&self.markdown_input, &options);
                 let styled_html = format!("<div style=\"font-family: sans-serif;\">{}</div>", html);
                 let html_widget = hframe::BareHtml::new("render_html").content(&styled_html);
 
