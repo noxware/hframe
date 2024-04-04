@@ -49,9 +49,16 @@ impl eframe::App for App {
             });
         });
 
-        egui::Window::new("Style")
-            .show(ctx, |ui| egui::widgets::global_dark_light_mode_buttons(ui))
-            .aware();
+        for i in 0..2 {
+            egui::Window::new("Move me")
+                .id(egui::Id::new(i))
+                .show(ctx, |ui| {
+                    ui.centered_and_justified(|ui| {
+                        ui.label("Use these floating resizable windows test the composition.");
+                    });
+                })
+                .aware();
+        }
 
         hframe::sync(ctx);
     }
