@@ -69,17 +69,16 @@
 //!   but doesn't provide a way to put bare HTML content in other places.
 
 mod aware;
-mod bare_html;
 mod composed_area;
 mod composition_context;
 pub(crate) mod composition_strategies;
 mod composition_strategy;
-mod html_window;
 pub(crate) mod utils;
+mod widgets;
 
 pub use aware::*;
-pub use bare_html::*;
 pub(crate) use composed_area::*;
 pub use composition_context::*;
 pub(crate) use composition_strategy::*;
-pub use html_window::*;
+pub use widgets::bare_html::*;
+pub use widgets::html_window::*;
