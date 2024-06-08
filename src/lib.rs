@@ -81,4 +81,5 @@ pub(crate) use composed_area::*;
 pub use composition_context::*;
 pub(crate) use composition_strategy::*;
 pub use widgets::bare_html::*;
+pub use widgets::bare_html_overlay::*;
 pub use widgets::html_window::*;

@@ -45,7 +45,7 @@ impl eframe::App for App {
 
                 let html = comrak::markdown_to_html(&self.markdown_input, &options);
                 let styled_html = format!("<div style=\"font-family: sans-serif;\">{}</div>", html);
-                let html_widget = hframe::BareHtml::new("render_html").content(&styled_html);
+                let html_widget = hframe::BareHtmlOverlay::new("render_html").content(&styled_html);
 
                 ui.add_sized([half_width, full_height], html_widget);
             });
