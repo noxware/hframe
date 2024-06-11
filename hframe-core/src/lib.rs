@@ -6,6 +6,7 @@ mod platform;
 mod test_platform;
 mod tree;
 mod web_platform;
+mod world;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

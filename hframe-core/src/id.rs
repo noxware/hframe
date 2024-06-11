@@ -3,6 +3,13 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) struct Id(u64);
 
+impl Id {
+    /// A semantic id representing the root of a tree-like resource.
+    pub(crate) fn root() -> Self {
+        Id(42)
+    }
+}
+
 impl From<u64> for Id {
     fn from(id: u64) -> Self {
         Id(id)

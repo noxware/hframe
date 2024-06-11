@@ -22,16 +22,23 @@ impl Size {
     }
 }
 
-/*
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-struct Rect {
-    pos: Pos,
-    size: Size,
+pub(crate) struct Rect {
+    pub(crate) pos: Pos,
+    pub(crate) size: Size,
 }
 
-impl Rect {
-    fn new(pos: Pos, size: Size) -> Self {
+impl From<(Pos, Size)> for Rect {
+    fn from((pos, size): (Pos, Size)) -> Self {
         Rect { pos, size }
     }
 }
-*/
+
+impl From<(f64, f64, f64, f64)> for Rect {
+    fn from((x, y, width, height): (f64, f64, f64, f64)) -> Self {
+        Rect {
+            pos: Pos::new(x, y),
+            size: Size::new(width, height),
+        }
+    }
+}

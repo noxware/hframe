@@ -55,6 +55,9 @@ impl<T: Debug> Node<T> {
         }))
     }
 
+    /// Nests a node inside this node.
+    /// Returns self allowing you to chain more `nest` calls for this.
+    // TODO: This allows mutation without `read_mut`. This should not exist here.
     pub(crate) fn nest(&self, node: Node<T>) -> Node<T> {
         self.read_mut(|data| data.children.push(node));
         self.clone()
