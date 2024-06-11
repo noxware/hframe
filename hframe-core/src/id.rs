@@ -20,7 +20,9 @@ impl From<&str> for Id {
     fn from(id: &str) -> Self {
         let mut hasher = DefaultHasher::new();
         id.hash(&mut hasher);
-        Id(hasher.finish())
+        let result = Id(hasher.finish());
+        eprintln!("Id::from({:?}) = {:?}", id, result);
+        result
     }
 }
 

@@ -103,6 +103,26 @@ impl<T: Debug> Node<T> {
         found
     }
 
+    /// Find the last node that matches the predicate.
+    ///
+    /// Note: This is not the same as getting the last inside a specific branch.
+    /// But has a similar effect when only one node per branch can match.
+    ///
+    /// This traverses the whole tree.
+    pub(crate) fn find_last(&self, predicate: impl Fn(Node<T>) -> bool) -> Option<Node<T>> {
+        let mut found = None;
+
+        self.walk(|node, _| {
+            if predicate(node.clone()) {
+                found = Some(node.clone());
+            }
+
+            Walk::Continue
+        });
+
+        found
+    }
+
     pub(crate) fn read<R>(&self, f: impl FnOnce(&NodeData<T>) -> R) -> R {
         self.data().read(|data| f(&data))
     }
