@@ -21,6 +21,10 @@ impl<P: Platform> Context<P> {
             })
         })
     }
+
+    fn sync(&mut self) {
+        todo!()
+    }
 }
 
 #[cfg(test)]
