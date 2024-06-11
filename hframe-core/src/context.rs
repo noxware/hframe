@@ -1,16 +1,21 @@
 use crate::{
-    composed_area::ComposedArea, platform::Platform, test_platform::TestPlatform, tree::Node,
+    composed_area::ComposedArea,
+    geo::Pos,
+    platform::{Platform, PlatformEvent},
+    test_platform::TestPlatform,
+    tree::Node,
     world::World,
 };
 
 struct Context<P: Platform> {
     world: World,
     platform: P,
+    pointer_pos: Pos,
 }
 
 impl<P: Platform> Context<P> {
     fn get_hovered_area(&self) -> Option<Node<ComposedArea>> {
-        let mouse_pos = self.platform.mouse_pos();
+        let mouse_pos = self.pointer_pos;
         self.world.root().find_last(|node| {
             node.read(|data| {
                 let area = &data.value;
@@ -23,6 +28,14 @@ impl<P: Platform> Context<P> {
     }
 
     fn sync(&mut self) {
+        for event in self.platform.events() {
+            match event {
+                PlatformEvent::PointerMove(pos) => {
+                    self.pointer_pos = *pos;
+                }
+                _ => {}
+            }
+        }
         todo!()
     }
 }
@@ -30,7 +43,7 @@ impl<P: Platform> Context<P> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        composed_area::{ComposedAreaKind, ComposedHtml},
+        composed_area::{ComposedAreaKind, ComposedAreaState, ComposedHtml},
         geo::{Pos, Rect, Size},
         id::Id,
         platform,
@@ -45,6 +58,7 @@ mod tests {
         let mut ctx = Context {
             platform: platform.clone(),
             world: World::new(Rect::from((0.0, 0.0, 100.0, 100.0))),
+            pointer_pos: Pos::new(0.0, 0.0),
         };
 
         ctx.world.add(
@@ -54,6 +68,7 @@ mod tests {
                 abs_pos: Pos::new(10.0, 10.0),
                 size: Size::new(50.0, 50.0),
                 kind: ComposedAreaKind::Canvas,
+                state: ComposedAreaState::new(),
             },
         );
 
@@ -66,6 +81,7 @@ mod tests {
                 kind: ComposedAreaKind::Html(ComposedHtml {
                     content: "<div>hello</div>".into(),
                 }),
+                state: ComposedAreaState::new(),
             },
         );
 

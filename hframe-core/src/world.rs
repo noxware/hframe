@@ -1,5 +1,5 @@
 use crate::{
-    composed_area::{ComposedArea, ComposedAreaKind},
+    composed_area::{ComposedArea, ComposedAreaKind, ComposedAreaState},
     geo::Rect,
     id::Id,
     tree::Node,
@@ -14,6 +14,7 @@ impl World {
             size: viewport.size,
             abs_pos: viewport.pos,
             kind: ComposedAreaKind::Canvas,
+            state: ComposedAreaState::new(),
         }))
     }
 
