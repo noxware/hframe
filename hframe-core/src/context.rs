@@ -6,13 +6,16 @@ use crate::{
     world::World,
 };
 
-struct Context<P: Platform> {
+/// Hold the state of the `hframe` world, the platform abstraction for reading events,
+/// provides queries for different info, etc.
+struct Engine<P: Platform> {
     world: World,
     platform: P,
     pointer_pos: Pos,
 }
 
-impl<P: Platform> Context<P> {
+impl<P: Platform> Engine<P> {
+    /// Returns the area that is currently under the pointer.
     fn get_hovered_area(&self) -> Option<Node<ComposedArea>> {
         let mouse_pos = self.pointer_pos;
         self.world.root().find_last(|node| {
@@ -26,7 +29,8 @@ impl<P: Platform> Context<P> {
         })
     }
 
-    fn sync(&mut self) {
+    /// Processes pending events appying the changes to the world state.
+    fn update_state(&mut self) {
         for event in self.platform.events() {
             match event {
                 PlatformEvent::PointerMove(pos) => {
@@ -35,6 +39,11 @@ impl<P: Platform> Context<P> {
                 _ => {}
             }
         }
+    }
+
+    /// Calls `update_state` and then `update_view`.
+    fn sync(&mut self) {
+        self.update_state();
     }
 }
 
@@ -51,7 +60,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut ctx = Context {
+        let mut ctx = Engine {
             platform: TestPlatform::new(),
             world: World::new(Rect::from((0.0, 0.0, 100.0, 100.0))),
             pointer_pos: Pos::new(0.0, 0.0),
