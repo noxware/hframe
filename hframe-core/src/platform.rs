@@ -16,6 +16,6 @@ pub(crate) enum PlatformEvent {
 }
 
 pub(crate) trait Platform {
-    fn events(&self) -> impl Iterator<Item = impl AsRef<PlatformEvent>>;
+    fn events(&self) -> impl Iterator<Item = &PlatformEvent>;
     fn clear_events(&mut self);
 }

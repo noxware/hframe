@@ -36,7 +36,6 @@ impl<P: Platform> Context<P> {
                 _ => {}
             }
         }
-        todo!()
     }
 }
 
@@ -46,17 +45,14 @@ mod tests {
         composed_area::{ComposedAreaKind, ComposedAreaState, ComposedHtml},
         geo::{Pos, Rect, Size},
         id::Id,
-        platform,
     };
 
     use super::*;
 
     #[test]
     fn it_works() {
-        let platform = TestPlatform::new();
-
         let mut ctx = Context {
-            platform: platform.clone(),
+            platform: TestPlatform::new(),
             world: World::new(Rect::from((0.0, 0.0, 100.0, 100.0))),
             pointer_pos: Pos::new(0.0, 0.0),
         };
@@ -91,17 +87,20 @@ mod tests {
             assert_eq!(data.value.id, Id::root());
         });
 
-        platform.set_mouse_pos(Pos::new(15.0, 15.0));
+        ctx.platform.move_pointer_to(Pos::new(15.0, 15.0));
+        ctx.sync();
         ctx.get_hovered_area().unwrap().read(|data| {
             assert_eq!(data.value.id, Id::from("grandchild"));
         });
 
-        platform.set_mouse_pos(Pos::new(30.0, 30.0));
+        ctx.platform.move_pointer_to(Pos::new(30.0, 30.0));
+        ctx.sync();
         ctx.get_hovered_area().unwrap().read(|data| {
             assert_eq!(data.value.id, Id::from("grandchild"));
         });
 
-        platform.set_mouse_pos(Pos::new(31.0, 31.0));
+        ctx.platform.move_pointer_to(Pos::new(31.0, 31.0));
+        ctx.sync();
         ctx.get_hovered_area().unwrap().read(|data| {
             assert_eq!(data.value.id, Id::from("child"));
         });
