@@ -1,8 +1,3 @@
-use std::{
-    cell::{Ref, RefCell},
-    rc::Rc,
-};
-
 use crate::{
     geo::Pos,
     platform::{Platform, PlatformEvent},

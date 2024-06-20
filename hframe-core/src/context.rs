@@ -2,7 +2,6 @@ use crate::{
     composed_area::ComposedArea,
     geo::Pos,
     platform::{Platform, PlatformEvent},
-    test_platform::TestPlatform,
     tree::Node,
     world::World,
 };
@@ -45,6 +44,7 @@ mod tests {
         composed_area::{ComposedAreaKind, ComposedAreaState, ComposedHtml},
         geo::{Pos, Rect, Size},
         id::Id,
+        test_platform::TestPlatform,
     };
 
     use super::*;
