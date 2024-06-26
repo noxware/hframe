@@ -1,20 +1,21 @@
 use crate::{
     composed_area::ComposedArea,
     geo::Pos,
+    id::Id,
     platform::{Platform, PlatformEvent},
-    tree::Node,
+    tree::{Node, Walk},
     world::World,
 };
 
 /// Hold the state of the `hframe` world, the platform abstraction for reading events,
 /// provides queries for different info, etc.
-struct Engine<P: Platform> {
+struct CompositionContext<P: Platform> {
     world: World,
     platform: P,
     pointer_pos: Pos,
 }
 
-impl<P: Platform> Engine<P> {
+impl<P: Platform> CompositionContext<P> {
     /// Returns the area that is currently under the pointer.
     fn get_hovered_area(&self) -> Option<Node<ComposedArea>> {
         let mouse_pos = self.pointer_pos;
@@ -29,8 +30,18 @@ impl<P: Platform> Engine<P> {
         })
     }
 
-    /// Processes pending events appying the changes to the world state.
-    fn update_state(&mut self) {
+    /// Gets the area that is currently marked as "under attention".
+    ///
+    /// If `sync` was executed, this should be the same as the hovered area.
+    /// If not, it may be different as the state is outdated.
+    fn get_under_attention_area(&self) -> Option<Node<ComposedArea>> {
+        self.world
+            .root()
+            .find(|node| node.read(|data| data.value.state.is_under_attention))
+    }
+
+    /// Processes pending events, and clear them.
+    fn process_events(&mut self) {
         for event in self.platform.events() {
             match event {
                 PlatformEvent::PointerMove(pos) => {
@@ -39,11 +50,25 @@ impl<P: Platform> Engine<P> {
                 _ => {}
             }
         }
+
+        self.platform.clear_events();
     }
 
-    /// Calls `update_state` and then `update_view`.
+    /// Using the current state from processing events, updates the data of the nodes.
+    fn update_nodes(&mut self) {
+        if let Some(prev) = self.get_under_attention_area() {
+            prev.read_mut(|data| data.value.state.is_under_attention = false);
+        }
+
+        if let Some(hovered) = self.get_hovered_area() {
+            hovered.read_mut(|data| data.value.state.is_under_attention = true);
+        }
+    }
+
+    /// Calls `process_events` and then...
     fn sync(&mut self) {
-        self.update_state();
+        self.process_events();
+        self.update_nodes();
     }
 }
 
@@ -60,7 +85,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut ctx = Engine {
+        let mut ctx = CompositionContext {
             platform: TestPlatform::new(),
             world: World::new(Rect::from((0.0, 0.0, 100.0, 100.0))),
             pointer_pos: Pos::new(0.0, 0.0),
@@ -84,6 +109,7 @@ mod tests {
                 abs_pos: Pos::new(5.0, 5.0),
                 size: Size::new(25.0, 25.0),
                 kind: ComposedAreaKind::Html(ComposedHtml {
+                    id: "hello".into(),
                     content: "<div>hello</div>".into(),
                 }),
                 state: ComposedAreaState::new(),
@@ -112,6 +138,15 @@ mod tests {
         ctx.sync();
         ctx.get_hovered_area().unwrap().read(|data| {
             assert_eq!(data.value.id, Id::from("child"));
+        });
+
+        ctx.platform.move_pointer_to(Pos::new(30.0, 30.0));
+        ctx.get_under_attention_area().unwrap().read(|data| {
+            assert_eq!(data.value.id, Id::from("child"));
+        });
+        ctx.sync();
+        ctx.get_under_attention_area().unwrap().read(|data| {
+            assert_eq!(data.value.id, Id::from("grandchild"));
         });
     }
 }

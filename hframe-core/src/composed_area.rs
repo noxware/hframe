@@ -3,6 +3,9 @@ use crate::{geo::*, id::*};
 /// Holds the HTML data of an HTML area.
 #[derive(Debug, Clone)]
 pub(crate) struct ComposedHtml {
+    /// The id of the HTML element.
+    pub(crate) id: String,
+    /// The HTML content contained by the area.
     pub(crate) content: String,
 }
 
@@ -16,12 +19,16 @@ pub(crate) enum ComposedAreaKind {
 /// States of a composed area that are tracked by `hframe`.
 #[derive(Debug, Clone)]
 pub(crate) struct ComposedAreaState {
-    pub(crate) active: bool,
+    /// Normally means the user has the pointer over the area (hover). This is a good opportunity
+    /// to enable interactions that may be disabled due to composition reasons.
+    pub(crate) is_under_attention: bool,
 }
 
 impl ComposedAreaState {
     pub(crate) fn new() -> Self {
-        ComposedAreaState { active: false }
+        ComposedAreaState {
+            is_under_attention: false,
+        }
     }
 }
 

@@ -1,28 +1,39 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::sync::{Arc, OnceLock};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) struct Id(u64);
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) struct Id(Arc<str>);
 
 impl Id {
     /// A semantic id representing the root of a tree-like resource.
     pub(crate) fn root() -> Self {
-        Id(42)
+        static ROOT: OnceLock<Id> = OnceLock::new();
+        ROOT.get_or_init(|| Id::from("__root__")).clone()
+    }
+
+    /// An id with no useful information. It acts as a "zero" id.
+    ///
+    /// Useful to simplify some algorithms.
+    pub(crate) fn empty() -> Self {
+        static EMPTY: OnceLock<Id> = OnceLock::new();
+        EMPTY.get_or_init(|| Id::from("__empty__")).clone()
     }
 }
 
-impl From<u64> for Id {
-    fn from(id: u64) -> Self {
-        Id(id)
+impl From<String> for Id {
+    fn from(id: String) -> Self {
+        Id(Arc::from(id))
     }
 }
 
 impl From<&str> for Id {
     fn from(id: &str) -> Self {
-        let mut hasher = DefaultHasher::new();
-        id.hash(&mut hasher);
-        let result = Id(hasher.finish());
-        eprintln!("Id::from({:?}) = {:?}", id, result);
-        result
+        Id(Arc::from(id))
+    }
+}
+
+impl From<u64> for Id {
+    fn from(id: u64) -> Self {
+        Id(Arc::from(format!("__uint__{}", id)))
     }
 }
 
