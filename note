@@ -1,0 +1,6 @@
+- already done. Hovered is enough for pointer allow  and nothing else is required once focused by keyboard
+	- probably not need for "attention" invent cocept as an strategy with ctx access can ask if somethig is the hovered one
+	- probably not need to save in state either
+- visible is co trolled by the ui lib, is state. Only useful for windows and toggles.
+- ids can be u64, and allow debug registry (that never clears) for improved debug like `#123@name`
+- `compose` call should apply everithing to the dom
