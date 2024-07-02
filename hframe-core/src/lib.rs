@@ -1,5 +1,7 @@
 mod composed_area;
 mod composition_context;
+mod composition_strategies;
+mod composition_strategy;
 mod geo;
 mod id;
 mod platform;
@@ -7,18 +9,3 @@ mod test_platform;
 mod tree;
 mod web_platform;
 mod world;
-
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}

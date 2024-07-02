@@ -1,5 +1,6 @@
 use crate::{
     composed_area::ComposedArea,
+    composition_strategy::CompositionStrategy,
     geo::Pos,
     platform::{Platform, PlatformEvent},
     tree::Node,
@@ -8,10 +9,12 @@ use crate::{
 
 /// Hold the state of the `hframe` world, the platform abstraction for reading events,
 /// provides queries for different info, etc.
-struct CompositionContext<P: Platform> {
+pub struct CompositionContext<P: Platform> {
     world: World,
     platform: P,
     pointer_pos: Pos,
+    // Preserved the possibility of switching strategies at runtime although I probably won't use it.
+    strategy: Box<dyn CompositionStrategy<P>>,
 }
 
 impl<P: Platform> CompositionContext<P> {
