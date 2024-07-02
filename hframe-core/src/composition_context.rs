@@ -10,7 +10,7 @@ use crate::{
 /// Hold the state of the `hframe` world, the platform abstraction for reading events,
 /// provides queries for different info, etc.
 pub struct CompositionContext<P: Platform> {
-    world: World,
+    pub world: World,
     platform: P,
     pointer_pos: Pos,
     // Preserved the possibility of switching strategies at runtime although I probably won't use it.

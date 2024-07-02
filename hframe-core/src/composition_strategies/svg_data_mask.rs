@@ -1,6 +1,12 @@
 use crate::{
-    composition_context::CompositionContext, composition_strategy::CompositionStrategy, id::Id,
-    platform::Platform, utils,
+    composed_area::{ComposedAreaKind, ComposedHtml},
+    composition_context::CompositionContext,
+    composition_strategy::CompositionStrategy,
+    geo::Rect,
+    id::Id,
+    platform::Platform,
+    tree::Walk,
+    utils,
 };
 use std::collections::{HashMap, HashSet};
 use web_sys::wasm_bindgen::JsCast;
@@ -49,6 +55,27 @@ impl<P: Platform> CompositionStrategy<P> for SvgDataMask {
     fn compose(&mut self, cmp: &mut CompositionContext<P>) {
         // Clean tracking garbage to avoid memory leaks.
         self.purge_previous_masks(cmp);
+
+        // Implement equivalent without nesting support.
+        cmp.world.root().walk(|node, depth| {
+            if depth == 0 {
+                return Walk::Continue;
+            }
+
+            node.read(|data| {
+                let area = &data.value;
+                let area_rect = area.abs_rect();
+
+                if let ComposedAreaKind::Html(ComposedHtml { content, .. }) = &area.kind {
+                    let area_html = content.as_str();
+
+                    // continue...
+                }
+            });
+
+            Walk::Continue
+        });
+
         for area in cmp.get_composed_areas() {
             if area.html.is_none() {
                 continue;

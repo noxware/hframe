@@ -27,3 +27,10 @@ pub(crate) struct ComposedArea {
     pub(crate) size: Size,
     pub(crate) kind: ComposedAreaKind,
 }
+
+impl ComposedArea {
+    /// Returns the rectangle that represents this area.
+    pub(crate) fn abs_rect(&self) -> Rect {
+        Rect::from((self.abs_pos, self.size))
+    }
+}
