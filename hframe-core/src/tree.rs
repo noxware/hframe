@@ -26,6 +26,10 @@ impl<T> Handle<T> {
             Err(_) => panic!("The handle can't be written because it's being read somewhere else. Hint: Search where a `read` closure is being used."),
         }
     }
+
+    fn is(&self, other: &Handle<T>) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
 }
 
 pub(crate) struct NodeData<T: Debug> {
@@ -53,6 +57,12 @@ impl<T: Debug> Node<T> {
             value,
             children: Vec::new(),
         }))
+    }
+
+    // Return if this node is equivalent to another node.
+    // This is true if both nodes share/points to the same data.
+    pub(crate) fn is(&self, other: &Node<T>) -> bool {
+        self.0.is(&other.0)
     }
 
     /// Nests a node inside this node.

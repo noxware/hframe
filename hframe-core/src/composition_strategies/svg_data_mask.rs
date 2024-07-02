@@ -1,11 +1,11 @@
 use crate::{
-    composed_area::{ComposedAreaKind, ComposedHtml},
+    composed_area::{ComposedArea, ComposedAreaKind, ComposedHtml},
     composition_context::CompositionContext,
     composition_strategy::CompositionStrategy,
     geo::Rect,
     id::Id,
     platform::Platform,
-    tree::Walk,
+    tree::{Node, Walk},
     utils,
 };
 use std::collections::{HashMap, HashSet};
@@ -56,17 +56,42 @@ impl<P: Platform> CompositionStrategy<P> for SvgDataMask {
         // Clean tracking garbage to avoid memory leaks.
         self.purge_previous_masks(cmp);
 
-        // TODO: Implement equivalent without nesting support.
+        let branch_roots: Vec<Node<ComposedArea>> = Vec::new();
+
+        // Inefficient since it will go deep just to know the depth 1 siblings.
+        // But works for now.
         cmp.world.root().walk(|node, depth| {
+            if depth == 1 {
+                branch_roots.push(node.clone());
+            }
+
+            Walk::Continue
+        });
+
+        let mut current_branch_root: Option<Node<ComposedArea>> = None;
+
+        cmp.world.root().walk(|node, depth| {
+            // Skip the root of the tree as it's not relevant.
             if depth == 0 {
                 return Walk::Continue;
             }
+
+            if depth == 1 {
+                current_branch_root = Some(node.clone());
+            }
+
+            let sibling_branch_roots = branch_roots
+                .iter()
+                .filter(|n| !current_branch_root.unwrap().is(n))
+                .collect::<Vec<_>>();
 
             node.read(|data| {
                 let area = &data.value;
                 let area_rect = area.abs_rect();
 
-                if let ComposedAreaKind::Html(ComposedHtml { content, .. }) = &area.kind {
+                // We only care about clipping HTML content.
+                // Note: HTML nodes should also be leafs.
+                if let ComposedAreaKind::Html(ComposedHtml { content, id }) = &area.kind {
                     let area_html = content.as_str();
 
                     // continue...
