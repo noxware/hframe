@@ -16,22 +16,6 @@ pub(crate) enum ComposedAreaKind {
     Html(ComposedHtml),
 }
 
-/// States of a composed area that are tracked by `hframe`.
-#[derive(Debug, Clone)]
-pub(crate) struct ComposedAreaState {
-    /// Normally means the user has the pointer over the area (hover). This is a good opportunity
-    /// to enable interactions that may be disabled due to composition reasons.
-    pub(crate) is_under_attention: bool,
-}
-
-impl ComposedAreaState {
-    pub(crate) fn new() -> Self {
-        ComposedAreaState {
-            is_under_attention: false,
-        }
-    }
-}
-
 /// A rectangular area of the UI that may live in the host/HTML world or in the guest/canvas world.
 ///
 /// This acts as a bridge between the host and guest worlds allowing representing overlapping areas between them or
@@ -42,5 +26,4 @@ pub(crate) struct ComposedArea {
     pub(crate) abs_pos: Pos,
     pub(crate) size: Size,
     pub(crate) kind: ComposedAreaKind,
-    pub(crate) state: ComposedAreaState,
 }
