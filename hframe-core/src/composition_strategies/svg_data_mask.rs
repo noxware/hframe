@@ -56,7 +56,7 @@ impl<P: Platform> CompositionStrategy<P> for SvgDataMask {
         // Clean tracking garbage to avoid memory leaks.
         self.purge_previous_masks(cmp);
 
-        // Implement equivalent without nesting support.
+        // TODO: Implement equivalent without nesting support.
         cmp.world.root().walk(|node, depth| {
             if depth == 0 {
                 return Walk::Continue;
