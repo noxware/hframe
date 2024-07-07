@@ -40,7 +40,7 @@ impl CompositionContext {
         }
 
         let composition_strategy: Box<dyn CompositionStrategy> =
-            Box::new(composition_strategies::SvgDataMask::new());
+            Box::new(composition_strategies::ColorMapMask::new());
 
         web_sys::console::debug_2(
             &JsValue::from("Using composition strategy:"),

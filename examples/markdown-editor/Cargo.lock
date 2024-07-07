@@ -1528,7 +1528,9 @@ name = "hframe"
 version = "0.4.1"
 dependencies = [
  "egui",
+ "js-sys",
  "urlencoding",
+ "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
 ]
