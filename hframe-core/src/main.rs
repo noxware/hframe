@@ -25,6 +25,8 @@ struct Rect {
 }
 
 /// Wrapper type over a mask url, that destroys the mask automatically when dropped.
+/// Because of the drop behavior, only one of these should exist at a time for each mask.
+/// Therefore, stuff like `new` and `clone` are not provided.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 struct MaskHandle(String);
 
