@@ -72,6 +72,7 @@ pub(crate) mod utils;
 
 mod aware;
 mod composition_context;
+mod core;
 mod html_window;
 
 pub use aware::*;
