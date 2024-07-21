@@ -56,73 +56,134 @@ mod js {
         pub(crate) async fn transform_element(id: &str, rect: JsValue, holes: JsValue);
         #[wasm_bindgen(catch)]
         pub(crate) fn dangerous_eval(code: &str) -> Result<JsValue, JsValue>;
+        pub(crate) fn render_fake_widget(widget: JsValue);
+        pub(crate) fn clear_fake_widgets();
     }
 }
+
+mod ui {
+    use super::*;
+
+    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+    pub(crate) struct Area {
+        pub(crate) abs_rect: Rect,
+        pub(crate) html_content: Option<String>,
+        pub(crate) html_id: Option<String>,
+    }
+
+    impl Area {
+        pub(crate) fn new(abs_rect: Rect) -> Self {
+            Self {
+                abs_rect,
+                html_content: None,
+                html_id: None,
+            }
+        }
+
+        pub(crate) fn is_html_area(&self) -> bool {
+            self.html_id.is_some()
+        }
+
+        pub(crate) fn is_canvas_area(&self) -> bool {
+            !self.is_html_area()
+        }
+
+        pub(crate) fn with_html_content(mut self, content: String) -> Self {
+            self.html_content = Some(content);
+            self
+        }
+
+        pub(crate) fn with_html_id(mut self, id: String) -> Self {
+            self.html_id = Some(id);
+            self
+        }
+    }
+
+    /// Simulate a UI element in a GUI lib like egui.
+    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+    pub(crate) struct FakeWidget {
+        pub(crate) color: String,
+        pub(crate) area: Area,
+    }
+
+    impl FakeWidget {
+        pub(crate) fn new(color: String, area: Area) -> Self {
+            Self { color, area }
+        }
+
+        pub(crate) fn render(&self) {
+            js::render_fake_widget(self.to_js_value());
+        }
+    }
+}
+
+use ui::*;
 
 #[wasm_bindgen(main)]
 async fn main() {
     console_error_panic_hook::set_once();
 
-    // Draw 3 overlaped rectangles, blue red and green.
-    js::dangerous_eval(
-        r#"
-        const canvasEl = document.getElementById("canvas");
-        const ctx = canvasEl.getContext("2d");
+    let mut widgets = vec![
+        ui::FakeWidget::new(
+            "blue".to_string(),
+            Area::new(Rect {
+                pos: Pos { x: 10.0, y: 10.0 },
+                size: Size {
+                    width: 100.0,
+                    height: 100.0,
+                },
+            }),
+        ),
+        ui::FakeWidget::new(
+            "yellow".to_string(),
+            Area::new(Rect {
+                pos: Pos { x: 100.0, y: 0.0 },
+                size: Size {
+                    width: 75.0,
+                    height: 75.0,
+                },
+            })
+            .with_html_id("hframe-yellow".to_string())
+            .with_html_content("hello".to_string()),
+        ),
+        ui::FakeWidget::new(
+            "red".to_string(),
+            Area::new(Rect {
+                pos: Pos { x: 50.0, y: 50.0 },
+                size: Size {
+                    width: 100.0,
+                    height: 100.0,
+                },
+            }),
+        ),
+        ui::FakeWidget::new(
+            "green".to_string(),
+            Area::new(Rect {
+                pos: Pos { x: 90.0, y: 90.0 },
+                size: Size {
+                    width: 100.0,
+                    height: 100.0,
+                },
+            }),
+        ),
+    ];
 
-        
-
-        ctx.fillStyle = "blue";
-        ctx.fillRect(10, 10, 100, 100);
-
-        ctx.fillStyle = "red";
-        ctx.fillRect(50, 50, 100, 100);
-
-        ctx.fillStyle = "green";
-        ctx.fillRect(90, 90, 100, 100);
-        "#,
-    )
-    .unwrap();
-
-    // Let's try to render this between red and blue.
-    js::dangerous_eval(
-        r#"
-        const el = document.createElement("div");
-        el.id = "hframe-yellow";
-        el.style.backgroundColor = "yellow";
-        el.style.position = "absolute";
-        el.style.width = "75px";
-        el.style.height = "75px";
-        el.style.top = "0";
-        el.style.left = "100px";
-        document.body.appendChild(el);
-    "#,
-    )
-    .unwrap();
-
-    js::transform_element(
-        "hframe-yellow",
-        Rect {
-            pos: Pos { x: 100.0, y: 0.0 },
-            size: Size {
-                width: 75.0,
-                height: 75.0,
-            },
+    loop {
+        js::clear_fake_widgets();
+        for widget in &widgets {
+            widget.render();
         }
-        .to_js_value(),
-        vec![Rect {
-            pos: Pos { x: 50.0, y: 50.0 },
-            size: Size {
-                width: 100.0,
-                height: 100.0,
-            },
-        }]
-        .to_js_value(),
-    )
-    .await;
 
-    // loop {
-    //     let pos = Pos::from_js_value(js::get_pointer_position());
-    //     js::log(pos.to_js_value());
-    //     js::sleep_ms(0).await;
-    // }
+        js::transform_element(
+            &widgets[1].area.html_id.as_ref().unwrap(),
+            widgets[1].area.abs_rect.to_js_value(),
+            vec![widgets[0].area.abs_rect].to_js_value(),
+        )
+        .await;
+
+        widgets[1].area.abs_rect.pos.x += 1.0;
+        widgets[0].area.abs_rect.pos.x += 2.0;
+
+        js::sleep_ms(200).await;
+    }
 }
