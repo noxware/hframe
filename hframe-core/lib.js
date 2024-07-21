@@ -1,8 +1,8 @@
-const mousePosition = { x: 0, y: 0 };
+const pointerPosition = { x: 0, y: 0 };
 
 window.addEventListener("mousemove", (e) => {
-  mousePosition.x = e.clientX;
-  mousePosition.y = e.clientY;
+  pointerPosition.x = e.clientX;
+  pointerPosition.y = e.clientY;
 });
 
 const maskTemplate = `
@@ -21,36 +21,16 @@ const holeTemplate = `
 <rect x="{x}" y="{y}" width="{width}" height="{height}" rx="5" fill="black" />
 `;
 
-const incomingMessages = [];
-const outgoingMessages = [];
-
-/** Exposes a way for WASM to send messages to JS. */
-export function sendMessage(message) {
-  incomingMessages.push(message);
+export function log(message) {
+  console.log(message);
 }
 
-/** Exposes a way for WASM to read messages from JS. Clears the messages. */
-export function receiveMessages() {
-  return outgoingMessages.splice(0, outgoingMessages.length);
+export function getPointerPosition() {
+  return pointerPosition;
 }
 
-/** Exposes a way for WASM to tell the JS side to do the work of a cycle,
- *  processing all pending messages.
- */
-export function tick() {
-  for (const message of incomingMessages) {
-    switch (message.type) {
-      case "TransformElement":
-        transformElement(message.id, message.rect, message.holes);
-        break;
-      case "Log":
-        console.log(message.message);
-        break;
-      default:
-        throw new Error(`Unknown message type: ${message.type}`);
-    }
-  }
-  incomingMessages.length = 0;
+export function sleepMs(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function transformElement(id, rect, holes) {
