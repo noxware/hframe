@@ -77,8 +77,7 @@ export function clear_fake_widgets() {
   ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 }
 
-// Rect and holes are relative to self element. They should come prepared.
-export async function transform_element(id, rect, holes) {
+export async function create_mask(rect, holes) {
   // TODO: Reuse canvas, adjusting sizes and cleaning when necessary.
 
   const canvas = new OffscreenCanvas(rect.size.width, rect.size.height);
@@ -99,10 +98,18 @@ export async function transform_element(id, rect, holes) {
 
   // Make an url from the blob
   const url = URL.createObjectURL(blob);
+  return url;
+}
 
+export function destroy_mask(url) {
+  URL.revokeObjectURL(url);
+}
+
+// Rect and holes are relative to self element. They should come prepared.
+export function transform_element(id, maskUrl) {
   // Use that as a mask
   const el = document.getElementById(id);
-  el.style.maskImage = `url(${url})`;
+  el.style.maskImage = `url(${maskUrl})`;
   el.style.maskSize = "100% 100%";
   el.style.maskMode = "luminance";
 }

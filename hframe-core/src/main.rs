@@ -1,3 +1,7 @@
+// TODO: CURRENT: Trying to not change the mask until the async mask generation
+// is done, and then change the mask in a request anim frame to hook just before
+// browser's drawing step.
+
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -17,6 +21,22 @@ struct Size {
 struct Rect {
     pos: Pos,
     size: Size,
+}
+
+/// Wrapper type over a mask url, that destroys the mask automatically when dropped.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+struct Mask(String);
+
+impl Mask {
+    fn url(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl Drop for Mask {
+    fn drop(&mut self) {
+        js::destroy_mask(self.to_js_value());
+    }
 }
 
 trait FromJsValue {
@@ -53,11 +73,13 @@ mod js {
         pub(crate) fn log(message: JsValue);
         pub(crate) fn get_pointer_position() -> JsValue;
         pub(crate) async fn sleep_ms(ms: u32);
-        pub(crate) async fn transform_element(id: &str, rect: JsValue, holes: JsValue);
+        pub(crate) fn transform_element(id: &str, mask: JsValue);
         pub(crate) fn set_visible(id: &str, visible: bool);
         pub(crate) fn set_pointer_interactivity(id: &str, interactive: bool);
         #[wasm_bindgen(catch)]
         pub(crate) fn dangerous_eval(code: &str) -> Result<JsValue, JsValue>;
+        pub(crate) async fn create_mask(rect: JsValue, holes: JsValue) -> JsValue;
+        pub(crate) fn destroy_mask(mask: JsValue);
         pub(crate) fn render_fake_widget(widget: JsValue);
         pub(crate) fn clear_fake_widgets();
     }
@@ -176,12 +198,16 @@ async fn main() {
             widget.render();
         }
 
-        js::transform_element(
-            &widgets[1].area.html_id.as_ref().unwrap(),
+        let yellow_mask = js::create_mask(
             widgets[1].area.abs_rect.to_js_value(),
             vec![widgets[0].area.abs_rect].to_js_value(),
         )
         .await;
+
+        js::transform_element(
+            &widgets[1].area.html_id.as_ref().unwrap(),
+            yellow_mask.clone(),
+        );
 
         widgets[1].area.abs_rect.pos.x += 1.0;
         widgets[0].area.abs_rect.pos.x += 2.0;
