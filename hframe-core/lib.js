@@ -88,3 +88,13 @@ export async function transform_element(id, rect, holes) {
   el.style.maskSize = "100% 100%";
   el.style.maskMode = "luminance";
 }
+
+export function set_visible(id, visible) {
+  const el = document.getElementById(id);
+  el.style.display = visible ? "block" : "none";
+}
+
+export function set_pointer_interactivity(id, interactive) {
+  const el = document.getElementById(id);
+  el.style.pointerEvents = interactive ? "auto" : "none";
+}

@@ -54,6 +54,8 @@ mod js {
         pub(crate) fn get_pointer_position() -> JsValue;
         pub(crate) async fn sleep_ms(ms: u32);
         pub(crate) async fn transform_element(id: &str, rect: JsValue, holes: JsValue);
+        pub(crate) fn set_visible(id: &str, visible: bool);
+        pub(crate) fn set_pointer_interactivity(id: &str, interactive: bool);
         #[wasm_bindgen(catch)]
         pub(crate) fn dangerous_eval(code: &str) -> Result<JsValue, JsValue>;
         pub(crate) fn render_fake_widget(widget: JsValue);
