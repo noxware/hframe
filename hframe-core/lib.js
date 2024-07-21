@@ -5,6 +5,24 @@ window.addEventListener("mousemove", (e) => {
   pointerPosition.y = e.clientY;
 });
 
+// create a stylesheet
+const style = document.createElement("style");
+style.innerHTML = `
+.hframe-area {
+  position: absolute;
+}
+
+.hframe-area > * {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  border: none;
+  overflow: auto;
+}
+`;
+document.head.appendChild(style);
+
 export function log(message) {
   console.log(message);
 }
@@ -34,10 +52,10 @@ export function render_fake_widget(widget) {
     el.innerHTML = widget.area.html_content;
     el.style.width = widget.area.abs_rect.size.width + "px";
     el.style.height = widget.area.abs_rect.size.height + "px";
-    el.style.position = "absolute";
     el.style.left = widget.area.abs_rect.pos.x + "px";
     el.style.top = widget.area.abs_rect.pos.y + "px";
     el.style.backgroundColor = widget.color;
+    el.classList.add("hframe-area");
     document.body.appendChild(el);
   } else {
     const canvasEl = document.getElementById("canvas");
