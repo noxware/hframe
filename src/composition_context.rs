@@ -4,9 +4,6 @@ use std::{
     ops::Deref,
     sync::{Arc, Mutex},
 };
-use web_sys::wasm_bindgen::JsValue;
-
-const GLOBAL_STYLES_ID: &str = "hframe-global-styles";
 
 pub(crate) struct CompositionContext {
     // Hope this doesn't cause a cycle reference. I don't see right know a way
@@ -20,32 +17,8 @@ pub(crate) struct CompositionContext {
 
 impl CompositionContext {
     pub(crate) fn new(egui_ctx: &egui::Context) -> Self {
-        let document = web_sys::window().unwrap().document().unwrap();
-
-        let style = document.get_element_by_id(GLOBAL_STYLES_ID);
-
-        if style.is_none() {
-            document
-                .head()
-                .expect("No head element found in the document")
-                .insert_adjacent_html(
-                    "beforeend",
-                    &format!(
-                        "<style id=\"{}\">{}</style>",
-                        GLOBAL_STYLES_ID,
-                        include_str!("hframe.css")
-                    ),
-                )
-                .unwrap();
-        }
-
         let composition_strategy: Box<dyn CompositionStrategy> =
             Box::new(composition_strategies::SvgDataMask::new());
-
-        web_sys::console::debug_2(
-            &JsValue::from("Using composition strategy:"),
-            &JsValue::from(composition_strategy.name()),
-        );
 
         Self {
             egui_ctx: egui_ctx.clone(),
@@ -58,47 +31,13 @@ impl CompositionContext {
     pub(crate) fn put_composed_area(&mut self, area: ComposedArea) {
         let (new, prev) = utils::vec::insert_or_replace(&mut self.composed_areas, area, |a| a.id);
         self.composed_areas_since_last_sync.insert(new.id);
-
-        if let Some(new_html) = &new.html {
-            let did_content_change = prev
-                .as_ref()
-                .map(|prev| {
-                    prev.html
-                        .as_ref()
-                        .expect("Non HTML area turned into HTML area")
-                        .content
-                        != new_html.content
-                })
-                .unwrap_or(true);
-
-            let window = web_sys::window().unwrap();
-            let document = window.document().unwrap();
-
-            let element = document.get_element_by_id(&new_html.id).unwrap_or_else(|| {
-                let body = document.body().unwrap();
-                let element = document.create_element("div").unwrap();
-                body.append_child(&element).unwrap();
-                element
-            });
-
-            if did_content_change {
-                element.set_outer_html(&new_html.to_outer_html());
-            } else {
-                element
-                    .set_attribute("style", &new_html.to_styles())
-                    .unwrap();
-            }
-        }
     }
 
     fn purge_composed_areas(&mut self) {
         self.composed_areas.retain(|a| {
             if !self.composed_areas_since_last_sync.contains(&a.id) {
                 if let Some(html) = &a.html {
-                    let window = web_sys::window().unwrap();
-                    let document = window.document().unwrap();
-                    let element = document.get_element_by_id(&html.id).unwrap();
-                    element.remove();
+                    // TODO: Remove the HTML element from the DOM.
                 }
                 false
             } else {
@@ -173,16 +112,6 @@ impl CompositionContext {
         self.composed_areas
             .iter()
             .find(|area| area.id == top_layer_id)
-    }
-}
-
-impl Drop for CompositionContext {
-    fn drop(&mut self) {
-        let document = web_sys::window().unwrap().document().unwrap();
-        let style = document.get_element_by_id(GLOBAL_STYLES_ID);
-        if let Some(style) = style {
-            style.remove();
-        }
     }
 }
 
