@@ -12,3 +12,7 @@ function main() {
 }
 
 main();
+
+export function doSomething() {
+  document.write("Hello, World!");
+}
