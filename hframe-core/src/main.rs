@@ -3,6 +3,7 @@
 // browser's drawing step.
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use tap::prelude::*;
 use wasm_bindgen::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
@@ -25,15 +26,15 @@ struct Rect {
 
 /// Wrapper type over a mask url, that destroys the mask automatically when dropped.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-struct Mask(String);
+struct MaskHandle(String);
 
-impl Mask {
+impl MaskHandle {
     fn url(&self) -> &str {
         self.0.as_str()
     }
 }
 
-impl Drop for Mask {
+impl Drop for MaskHandle {
     fn drop(&mut self) {
         js::destroy_mask(self.to_js_value());
     }
@@ -198,15 +199,17 @@ async fn main() {
             widget.render();
         }
 
+        // Will revoke the mask when dropped.
         let yellow_mask = js::create_mask(
             widgets[1].area.abs_rect.to_js_value(),
             vec![widgets[0].area.abs_rect].to_js_value(),
         )
-        .await;
+        .await
+        .pipe(|v| MaskHandle::from_js_value(v));
 
         js::transform_element(
             &widgets[1].area.html_id.as_ref().unwrap(),
-            yellow_mask.clone(),
+            yellow_mask.to_js_value(),
         );
 
         widgets[1].area.abs_rect.pos.x += 1.0;
