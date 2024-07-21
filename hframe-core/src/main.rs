@@ -50,13 +50,12 @@ mod js {
 
     #[wasm_bindgen(module = "/lib.js")]
     extern "C" {
-        #[wasm_bindgen]
         pub(crate) fn log(message: JsValue);
-        #[wasm_bindgen(js_name = getPointerPosition)]
         pub(crate) fn get_pointer_position() -> JsValue;
-        #[wasm_bindgen(js_name = sleepMs)]
         pub(crate) async fn sleep_ms(ms: u32);
-
+        pub(crate) async fn transform_element(id: &str, rect: JsValue, holes: JsValue);
+        #[wasm_bindgen(catch)]
+        pub(crate) fn dangerous_eval(code: &str) -> Result<JsValue, JsValue>;
     }
 }
 
@@ -64,9 +63,66 @@ mod js {
 async fn main() {
     console_error_panic_hook::set_once();
 
-    loop {
-        let pos = Pos::from_js_value(js::get_pointer_position());
-        js::log(pos.to_js_value());
-        js::sleep_ms(0).await;
-    }
+    // Draw 3 overlaped rectangles, blue red and green.
+    js::dangerous_eval(
+        r#"
+        const canvasEl = document.getElementById("canvas");
+        const ctx = canvasEl.getContext("2d");
+
+        
+
+        ctx.fillStyle = "blue";
+        ctx.fillRect(10, 10, 100, 100);
+
+        ctx.fillStyle = "red";
+        ctx.fillRect(50, 50, 100, 100);
+
+        ctx.fillStyle = "green";
+        ctx.fillRect(90, 90, 100, 100);
+        "#,
+    )
+    .unwrap();
+
+    // Let's try to render this between red and blue.
+    js::dangerous_eval(
+        r#"
+        const el = document.createElement("div");
+        el.id = "hframe-yellow";
+        el.style.backgroundColor = "yellow";
+        el.style.position = "absolute";
+        el.style.width = "75px";
+        el.style.height = "75px";
+        el.style.top = "0";
+        el.style.left = "100px";
+        document.body.appendChild(el);
+    "#,
+    )
+    .unwrap();
+
+    js::transform_element(
+        "hframe-yellow",
+        Rect {
+            pos: Pos { x: 100.0, y: 0.0 },
+            size: Size {
+                width: 75.0,
+                height: 75.0,
+            },
+        }
+        .to_js_value(),
+        vec![Rect {
+            pos: Pos { x: 50.0, y: 50.0 },
+            size: Size {
+                width: 100.0,
+                height: 100.0,
+            },
+        }]
+        .to_js_value(),
+    )
+    .await;
+
+    // loop {
+    //     let pos = Pos::from_js_value(js::get_pointer_position());
+    //     js::log(pos.to_js_value());
+    //     js::sleep_ms(0).await;
+    // }
 }
