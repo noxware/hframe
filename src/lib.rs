@@ -68,13 +68,5 @@
 //! - Currently the API only provides a way to create egui windows with HTML "inside"
 //!   but doesn't provide a way to put bare HTML content in other places.
 
-pub(crate) mod utils;
-
-mod aware;
-mod composition_context;
-mod core;
-mod html_window;
-
-pub use aware::*;
-pub use composition_context::*;
-pub use html_window::*;
+pub(crate) mod core;
+pub mod egui;
