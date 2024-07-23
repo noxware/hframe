@@ -87,14 +87,15 @@ export async function create_mask(rect, holes) {
   const ctx = canvas.getContext("2d");
 
   // Fill everything with solid color
-  ctx.fillStyle = "white";
+  ctx.fillStyle = "black";
   ctx.fillRect(0, 0, rect.size.width, rect.size.height);
 
   // Cut holes
-  ctx.fillStyle = "black";
+  ctx.globalCompositeOperation = "destination-out";
   holes.forEach((hole) => {
     ctx.fillRect(hole.pos.x, hole.pos.y, hole.size.width, hole.size.height);
   });
+  ctx.globalCompositeOperation = "source-over";
 
   // Get the image as blob
   const blob = await canvas.convertToBlob();
@@ -113,8 +114,11 @@ export function transform_element(id, maskUrl) {
   // Use that as a mask
   const el = document.getElementById(id);
   el.style.maskImage = `url(${maskUrl})`;
+  el.style.webkitMaskImage = `url(${maskUrl})`;
   el.style.maskSize = "100% 100%";
-  el.style.maskMode = "luminance";
+  el.style.webkitMaskSize = "100% 100%";
+  // In Gnome Web, mask mode seems to be ignored. I'm just being explicit in other browsers.
+  el.style.maskMode = "alpha";
 }
 
 const masks = {};
