@@ -1,3 +1,23 @@
+// Pollyfill for OffscreenCanvas, needed for Gnome Web.
+if (!window.OffscreenCanvas) {
+  window.OffscreenCanvas = class OffscreenCanvas {
+    constructor(width, height) {
+      // TODO: Will probably be garbage collected when no more references but improve this just in case.
+      this.canvas = document.createElement("canvas");
+      this.canvas.width = width;
+      this.canvas.height = height;
+
+      this.canvas.convertToBlob = () => {
+        return new Promise((resolve) => {
+          this.canvas.toBlob(resolve);
+        });
+      };
+
+      return this.canvas;
+    }
+  };
+}
+
 const pointerPosition = { x: 0, y: 0 };
 
 window.addEventListener("mousemove", (e) => {
