@@ -24,24 +24,6 @@ struct Rect {
     size: Size,
 }
 
-/// Wrapper type over a mask url, that destroys the mask automatically when dropped.
-/// Because of the drop behavior, only one of these should exist at a time for each mask.
-/// Therefore, stuff like `new` and `clone` are not provided.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-struct MaskHandle(String);
-
-impl MaskHandle {
-    fn url(&self) -> &str {
-        self.0.as_str()
-    }
-}
-
-impl Drop for MaskHandle {
-    fn drop(&mut self) {
-        js::destroy_mask(self.to_js_value());
-    }
-}
-
 trait FromJsValue {
     fn from_js_value(value: JsValue) -> Self;
 }
@@ -75,14 +57,12 @@ mod js {
     extern "C" {
         pub(crate) fn log(message: JsValue);
         pub(crate) fn get_pointer_position() -> JsValue;
+        pub(crate) fn mask_element(id: &str, rect: JsValue, holes: JsValue);
         pub(crate) async fn sleep_ms(ms: u32);
-        pub(crate) fn transform_element(id: &str, mask: JsValue);
         pub(crate) fn set_visible(id: &str, visible: bool);
         pub(crate) fn set_pointer_interactivity(id: &str, interactive: bool);
         #[wasm_bindgen(catch)]
         pub(crate) fn dangerous_eval(code: &str) -> Result<JsValue, JsValue>;
-        pub(crate) async fn create_mask(rect: JsValue, holes: JsValue) -> JsValue;
-        pub(crate) fn destroy_mask(mask: JsValue);
         pub(crate) fn render_fake_widget(widget: JsValue);
         pub(crate) fn clear_fake_widgets();
     }
@@ -201,22 +181,15 @@ async fn main() {
             widget.render();
         }
 
-        // Will revoke the mask when dropped.
-        let yellow_mask = js::create_mask(
+        js::mask_element(
+            &widgets[1].area.html_id.as_ref().unwrap(),
             widgets[1].area.abs_rect.to_js_value(),
             vec![widgets[0].area.abs_rect].to_js_value(),
-        )
-        .await
-        .pipe(|v| MaskHandle::from_js_value(v));
-
-        js::transform_element(
-            &widgets[1].area.html_id.as_ref().unwrap(),
-            yellow_mask.to_js_value(),
         );
 
         widgets[1].area.abs_rect.pos.x += 1.0;
         widgets[0].area.abs_rect.pos.x += 2.0;
 
-        js::sleep_ms(200).await;
+        js::sleep_ms(50).await;
     }
 }

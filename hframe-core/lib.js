@@ -39,16 +39,20 @@ export function sleep_ms(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function getOrCreateBodyElementById(id) {
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement("div");
+    el.id = id;
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
 export function render_fake_widget(widget) {
   console.log("Rendering fake widget", widget);
   if (widget.area.html_id) {
-    if (!document.getElementById(widget.area.html_id)) {
-      const el = document.createElement("div");
-      el.id = widget.area.html_id;
-      document.body.appendChild(el);
-    }
-
-    const el = document.getElementById(widget.area.html_id);
+    const el = getOrCreateBodyElementById(widget.area.html_id);
     el.innerHTML = widget.area.html_content;
     el.style.width = widget.area.abs_rect.size.width + "px";
     el.style.height = widget.area.abs_rect.size.height + "px";
@@ -56,7 +60,6 @@ export function render_fake_widget(widget) {
     el.style.top = widget.area.abs_rect.pos.y + "px";
     el.style.backgroundColor = widget.color;
     el.classList.add("hframe-area");
-    document.body.appendChild(el);
   } else {
     const canvasEl = document.getElementById("canvas");
     const ctx = canvasEl.getContext("2d");
@@ -112,6 +115,35 @@ export function transform_element(id, maskUrl) {
   el.style.maskImage = `url(${maskUrl})`;
   el.style.maskSize = "100% 100%";
   el.style.maskMode = "luminance";
+}
+
+const masks = {};
+
+export function mask_element(id, rect, holes) {
+  if (!masks[id]) {
+    masks[id] = {
+      working: false,
+      url: null,
+    };
+  }
+
+  const mask = masks[id];
+
+  if (mask.working) {
+    return;
+  }
+
+  mask.working = true;
+
+  create_mask(rect, holes).then((maskUrl) => {
+    requestAnimationFrame(() => {
+      transform_element("cool", maskUrl);
+      requestAnimationFrame(() => {
+        transform_element(id, maskUrl);
+        mask.working = false;
+      });
+    });
+  });
 }
 
 export function set_visible(id, visible) {
