@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <img id="target" src="https://img.freepik.com/premium-photo/beautiful-cute-anime-girl-innocent-anime-teenage_744422-6819.jpg?w=360" width="360" height="360"></img>
+  <script>
+    (async () => {
+      let angle = 0;
+      while (true) {
+        // make an off screen canvas
+        const canvas = new OffscreenCanvas(50, 50);
+        const ctx = canvas.getContext('2d');
+        // rotate the canvas
+        ctx.rotate(angle);
+        angle += 0.01;
+        // draw a 50 x 50 rectangle
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, 50, 50);
+        // make a blob
+        const blob = await canvas.convertToBlob();
+        // make a URL
+        const url = URL.createObjectURL(blob);
+        // mask the target image
+        console.log(url);
+        document.getElementById('target').style.maskImage = `url(${url})`;
+        // wait 0.5 seconds
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    })();
+  </script>
+</body>
+</html>
