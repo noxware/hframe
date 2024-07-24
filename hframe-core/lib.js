@@ -161,7 +161,7 @@ export function mask_element(id, rect, holes) {
 
   create_mask(rect, holes).then((maskUrl) => {
     requestAnimationFrame(() => {
-      transform_element("cool", maskUrl);
+      document.getElementById(cool).style.src = maskUrl;
       requestAnimationFrame(() => {
         transform_element(id, maskUrl);
         mask.working = false;
