@@ -6,28 +6,38 @@
 </head>
 <body>
   <img id="target" src="https://img.freepik.com/premium-photo/beautiful-cute-anime-girl-innocent-anime-teenage_744422-6819.jpg?w=360" width="360" height="360"></img>
+  <img id="mask-preload" width="360" height="360"></img>
   <script>
     (async () => {
-      let angle = 0;
-      while (true) {
-        // make an off screen canvas
-        const canvas = new OffscreenCanvas(50, 50);
+
+      let url;
+
+
+      while (true) {  
+        const canvas = new OffscreenCanvas(360, 360);
         const ctx = canvas.getContext('2d');
-        // rotate the canvas
-        ctx.rotate(angle);
-        angle += 0.01;
-        // draw a 50 x 50 rectangle
         ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, 50, 50);
-        // make a blob
+        url && URL.revokeObjectURL(url);
+        
+        if (Math.random() < 0.5) {
+          ctx.roundRect(0, 0, 150, 150, 5);
+        } else {
+          ctx.roundRect(200, 200, 160, 160, 0);
+        }
+
+        ctx.fill();
+
         const blob = await canvas.convertToBlob();
-        // make a URL
-        const url = URL.createObjectURL(blob);
-        // mask the target image
-        console.log(url);
-        document.getElementById('target').style.maskImage = `url(${url})`;
-        // wait 0.5 seconds
-        await new Promise(resolve => setTimeout(resolve, 500));
+        url = URL.createObjectURL(blob);
+        //await new Promise(resolve => setTimeout(resolve, 100));
+
+        const maskPreload = document.getElementById('mask-preload');
+        maskPreload.src = url;
+        await new Promise(resolve => maskPreload.onload = resolve);
+
+        const img = document.getElementById('target');
+        img.style.maskImage = `url(${url})`;
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     })();
   </script>
