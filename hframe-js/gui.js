@@ -143,11 +143,8 @@ function interpret() {
 
   const canvas = document.getElementById("hframe-canvas");
   const ctx = canvas.getContext("2d");
-  let lastTime = 0;
 
-  const loop = (now) => {
-    const dt = now - lastTime;
-    lastTime = now;
+  const loop = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     for (const widget of widgets) {
@@ -191,6 +188,7 @@ function interpret() {
       }
     }
 
+    widgets[0].x += 0.1;
     requestAnimationFrame(loop);
   };
 
