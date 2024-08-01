@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      svg {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <mask id="myMask">
+          <!-- Define the mask shape here -->
+          <rect x="0" y="0" width="200" height="200" fill="white" />
+          <circle id="maskCircle" cx="100" cy="150" r="50" fill="black" />
+        </mask>
+      </defs>
+      <rect x="10" y="10" width="30" height="30" fill="red"></rect>
+      <foreignObject x="20" y="20" width="160" height="160" mask="url(#myMask)">
+        <!--
+        In the context of SVG embedded in an HTML document, the XHTML
+        namespace could be omitted, but it is mandatory in the
+        context of an SVG document
+      -->
+        <div
+          xmlns="http://www.w3.org/1999/xhtml"
+          style="background-color: green"
+        >
+          Lorem ipsum dolor sit amet
+        </div>
+      </foreignObject>
+    </svg>
+
+    <script>
+      let maskCircle = document.getElementById("maskCircle");
+      let yPosition = 150;
+      const speed = 1; // Adjust speed as necessary
+
+      function animateMask() {
+        yPosition -= speed;
+        if (yPosition < 0) {
+          yPosition = 200; // Reset to the bottom
+        }
+        maskCircle.setAttribute("cy", yPosition);
+        requestAnimationFrame(animateMask);
+      }
+
+      animateMask();
+    </script>
+  </body>
+</html>
