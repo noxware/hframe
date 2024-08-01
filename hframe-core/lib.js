@@ -1,33 +1,34 @@
-// Pollyfill for OffscreenCanvas, needed for Gnome Web.
-if (!window.OffscreenCanvas) {
-  window.OffscreenCanvas = class OffscreenCanvas {
-    constructor(width, height) {
-      // TODO: Will probably be garbage collected when no more references but improve this just in case.
-      this.canvas = document.createElement("canvas");
-      this.canvas.width = width;
-      this.canvas.height = height;
-
-      this.canvas.convertToBlob = () => {
-        return new Promise((resolve) => {
-          this.canvas.toBlob(resolve);
-        });
-      };
-
-      return this.canvas;
-    }
-  };
-}
-
 const pointerPosition = { x: 0, y: 0 };
 
-window.addEventListener("mousemove", (e) => {
-  pointerPosition.x = e.clientX;
-  pointerPosition.y = e.clientY;
-});
+function oneTimeSetup() {
+  // Pollyfill for OffscreenCanvas, needed for Gnome Web.
+  if (!window.OffscreenCanvas) {
+    window.OffscreenCanvas = class OffscreenCanvas {
+      constructor(width, height) {
+        // TODO: Will probably be garbage collected when no more references but improve this just in case.
+        this.canvas = document.createElement("canvas");
+        this.canvas.width = width;
+        this.canvas.height = height;
 
-// create a stylesheet
-const style = document.createElement("style");
-style.innerHTML = `
+        this.canvas.convertToBlob = () => {
+          return new Promise((resolve) => {
+            this.canvas.toBlob(resolve);
+          });
+        };
+
+        return this.canvas;
+      }
+    };
+  }
+
+  window.addEventListener("mousemove", (e) => {
+    pointerPosition.x = e.clientX;
+    pointerPosition.y = e.clientY;
+  });
+
+  // create a stylesheet
+  const style = document.createElement("style");
+  style.innerHTML = `
 .hframe-area {
   position: absolute;
 }
@@ -41,7 +42,10 @@ style.innerHTML = `
   overflow: auto;
 }
 `;
-document.head.appendChild(style);
+  document.head.appendChild(style);
+}
+
+oneTimeSetup();
 
 export function log(message) {
   console.log(message);
