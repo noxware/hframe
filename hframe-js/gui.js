@@ -24,9 +24,103 @@ function oneTimeSetup() {
   initSvgLayer();
 }
 
-oneTimeSetup();
+function getOrCreateEmbed(id) {
+  const existing = document.getElementById(id);
 
-function play() {
+  if (existing) {
+    return existing;
+  }
+
+  const embed = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "foreignObject"
+  );
+  embed.id = id;
+  document.getElementById("hframe-svg").appendChild(embed);
+
+  return embed;
+}
+
+function getOrCreateMask(id) {
+  const existing = document.getElementById(id);
+
+  if (existing) {
+    return existing;
+  }
+
+  const mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+  mask.id = id;
+  document.getElementById("hframe-svg-defs").appendChild(mask);
+  return mask;
+}
+
+function getOrCreateMaskSlot(mask, id, mode) {
+  const existing = document.getElementById(id);
+
+  if (existing) {
+    return existing;
+  }
+
+  const component = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "rect"
+  );
+  component.id = id;
+
+  if (mode === "drill") {
+    setAttributes(component, { fill: "black" });
+    mask.appendChild(component);
+  } else {
+    setAttributes(component, { fill: "white" });
+    mask.prepend(component);
+  }
+
+  return component;
+}
+
+function setContent(embed, content) {
+  if (embed.innerHTML !== content) {
+    embed.innerHTML = content;
+  }
+}
+
+function setAttributes(embed, map) {
+  for (const [name, value] of Object.entries(map)) {
+    if (embed.getAttribute(name) !== value) {
+      embed.setAttribute(name, value);
+    }
+  }
+}
+
+function setStyles(embed, map) {
+  for (const [name, value] of Object.entries(map)) {
+    if (embed.style[name] !== value) {
+      embed.style[name] = value;
+    }
+  }
+}
+
+function fillMask(mask, id, x, y, width, height) {
+  const slot = getOrCreateMaskSlot(mask, id, "fill");
+  setAttributes(slot, {
+    x,
+    y,
+    width,
+    height,
+  });
+}
+
+function drillMask(mask, id, x, y, width, height) {
+  const slot = getOrCreateMaskSlot(mask, id, "drill");
+  setAttributes(slot, {
+    x,
+    y,
+    width,
+    height,
+  });
+}
+
+function interpret() {
   const widgets = [
     {
       id: "c0",
@@ -60,37 +154,40 @@ function play() {
       if (widget.kind === "canvas") {
         ctx.fillStyle = "red";
         ctx.fillRect(widget.x, widget.y, widget.width, widget.height);
+
+        // begin very specific code
+        const mask = getOrCreateMask("h0-mask");
+        drillMask(
+          mask,
+          "c0-drill",
+          widget.x,
+          widget.y,
+          widget.width,
+          widget.height
+        );
+        // end very specific code
       } else if (widget.kind === "html") {
-        const existing = document.getElementById(widget.id);
+        const embed = getOrCreateEmbed(widget.id);
+        const mask = getOrCreateMask(widget.id + "-mask");
 
-        if (existing) {
-          const wrapper = existing.firstChild;
-          if (wrapper.innerHTML !== widget.content) {
-            wrapper.innerHTML = widget.content;
-          }
-        } else {
-          const embed = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "foreignObject"
-          );
-          embed.id = widget.id;
-          embed.setAttribute("x", widget.x);
-          embed.setAttribute("y", widget.y);
-          embed.setAttribute("width", widget.width);
-          embed.setAttribute("height", widget.height);
+        setAttributes(embed, {
+          x: widget.x,
+          y: widget.y,
+          width: widget.width,
+          height: widget.height,
+          mask: `url(#${mask.id})`,
+        });
 
-          const wrapper = document.createElement("div");
-          wrapper.innerHTML = widget.content;
-          wrapper.style.width = "100%";
-          wrapper.style.height = "100%";
-          wrapper.style.maxWidth = "100%";
-          wrapper.style.maxHeight = "100%";
-          wrapper.style.overflow = "auto";
-          embed.appendChild(wrapper);
+        setContent(embed, widget.content);
 
-          const svg = document.getElementById("hframe-svg");
-          svg.appendChild(embed);
-        }
+        fillMask(
+          mask,
+          widget.id + "-fill",
+          widget.x,
+          widget.y,
+          widget.width,
+          widget.height
+        );
       }
     }
 
@@ -100,4 +197,5 @@ function play() {
   loop();
 }
 
-play();
+oneTimeSetup();
+interpret();
