@@ -18,6 +18,48 @@
       import { h, Component, render } from "https://esm.sh/preact@10.23.2";
       import { useState, useEffect } from "https://esm.sh/preact@10.23.2/hooks";
 
+      function Area(area) {
+        return h(
+          "foreignObject",
+          {
+            key: area.id,
+            x: area.x,
+            y: area.y,
+            width: area.width,
+            height: area.height,
+            style: {
+              overflow: "hidden",
+            },
+          },
+          [
+            h("div", {
+              style: {
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "lightblue",
+              },
+              dangerouslySetInnerHTML: {
+                __html: area.content,
+              },
+            }),
+          ]
+        );
+      }
+
+      function MaskRect(area) {
+        return h("rect", {
+          key: area.id,
+          x: area.x,
+          y: area.y,
+          width: area.width,
+          height: area.height,
+          fill: area.type === "canvas" ? "black" : "white",
+        });
+      }
+
       function App() {
         const [width, setWidth] = useState(window.innerWidth);
         const [height, setHeight] = useState(window.innerHeight);
@@ -56,51 +98,11 @@
                 {
                   id: "mask",
                 },
-                areas.map((area) =>
-                  h("rect", {
-                    key: area.id,
-                    x: area.x,
-                    y: area.y,
-                    width: area.width,
-                    height: area.height,
-                    fill: area.type === "canvas" ? "black" : "white",
-                  })
-                )
+                areas.map(MaskRect)
               ),
             ]),
 
-            ...areas
-              .filter((area) => area.type === "html")
-              .map((area) =>
-                h(
-                  "foreignObject",
-                  {
-                    key: area.id,
-                    x: area.x,
-                    y: area.y,
-                    width: area.width,
-                    height: area.height,
-                    style: {
-                      overflow: "hidden",
-                    },
-                  },
-                  [
-                    h("div", {
-                      style: {
-                        width: "100%",
-                        height: "100%",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: "lightblue",
-                      },
-                      dangerouslySetInnerHTML: {
-                        __html: area.content,
-                      },
-                    }),
-                  ]
-                )
-              ),
+            ...areas.filter((area) => area.type === "html").map(Area),
           ]
         );
       }
