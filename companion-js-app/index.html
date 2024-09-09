@@ -21,34 +21,8 @@
       function App() {
         const [width, setWidth] = useState(window.innerWidth);
         const [height, setHeight] = useState(window.innerHeight);
-        const [areas, setAreas] = useState([
-          {
-            type: "html",
-            id: "h1",
-            x: 10,
-            y: 10,
-            width: 200,
-            height: 200,
-            content: "<h1>Hello, World!</h1>",
-          },
-          {
-            type: "canvas",
-            id: "c1",
-            x: 50,
-            y: 50,
-            width: 100,
-            height: 100,
-          },
-          {
-            type: "html",
-            id: "h2",
-            x: 100,
-            y: 100,
-            width: 200,
-            height: 200,
-            content: "<h2>Hello, World!</h2>",
-          },
-        ]);
+        const [areas, setAreas] = useState([]);
+        window.setAreas = setAreas;
 
         useEffect(() => {
           window.addEventListener("resize", () => {
@@ -132,6 +106,53 @@
       }
 
       render(h(App), document.body);
+      window.dispatchEvent(new CustomEvent("hframeJsLoaded"));
+    </script>
+    <script>
+      window.addEventListener("hframeJsLoaded", () => {
+        const areas = [
+          {
+            type: "html",
+            id: "h1",
+            x: 10,
+            y: 10,
+            width: 200,
+            height: 200,
+            content: "<h1>Hello, World!</h1>",
+          },
+          {
+            type: "canvas",
+            id: "c1",
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 100,
+          },
+          {
+            type: "html",
+            id: "h2",
+            x: 100,
+            y: 100,
+            width: 200,
+            height: 200,
+            content: "<h2>Hello, World!</h2>",
+          },
+        ];
+
+        setAreas(areas);
+
+        setInterval(() => {
+          if (areas[0].x > 450) {
+            return;
+          }
+
+          areas[0].x += 1;
+          areas[0].y += 1;
+          areas[1].x += 1;
+          areas[1].y += 1;
+          setAreas([...areas]);
+        }, 30);
+      });
     </script>
   </body>
 </html>
