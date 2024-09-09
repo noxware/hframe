@@ -40,6 +40,11 @@
                 justifyContent: "center",
                 alignItems: "center",
                 backgroundColor: "lightblue",
+                visibility: area.visible ? "visible" : "hidden",
+                pointerEvents: area.interactive ? "auto" : "none",
+              },
+              onMouseEnter: () => {
+                console.log("Mouse entered");
               },
               dangerouslySetInnerHTML: {
                 __html: area.content,
@@ -120,7 +125,9 @@
             y: 10,
             width: 200,
             height: 200,
-            content: "<h1>Hello, World!</h1>",
+            visible: true,
+            interactive: true,
+            content: "<h2>h1h1h1h1h1h1h1h1h1</h2>",
           },
           {
             type: "canvas",
@@ -137,7 +144,31 @@
             y: 100,
             width: 200,
             height: 200,
-            content: "<h2>Hello, World!</h2>",
+            visible: true,
+            interactive: true,
+            content: "<button>h2</button>",
+          },
+          {
+            type: "html",
+            id: "h3",
+            x: 300,
+            y: 400,
+            width: 200,
+            height: 200,
+            visible: true,
+            interactive: false,
+            content: "<button>h3</button>",
+          },
+          {
+            type: "html",
+            id: "h4",
+            x: 50,
+            y: 400,
+            width: 200,
+            height: 200,
+            visible: false,
+            interactive: false,
+            content: "<button>h4</button>",
           },
         ];
 
