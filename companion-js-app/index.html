@@ -1,5 +1,18 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 0, 0, 0.2);
+      }
+    </style>
+  </head>
   <body>
     <script type="module">
       import { h, Component, render } from "https://esm.sh/preact@10.23.2";
@@ -14,17 +27,25 @@
             id: "h1",
             x: 10,
             y: 10,
+            width: 200,
+            height: 200,
+            content: "<h1>Hello, World!</h1>",
+          },
+          {
+            type: "canvas",
+            id: "c1",
+            x: 50,
+            y: 50,
             width: 100,
             height: 100,
-            content: "<h1>Hello, World!</h1>",
           },
           {
             type: "html",
             id: "h2",
-            x: 120,
-            y: 10,
-            width: 100,
-            height: 100,
+            x: 100,
+            y: 100,
+            width: 200,
+            height: 200,
             content: "<h2>Hello, World!</h2>",
           },
         ]);
@@ -51,10 +72,28 @@
               position: "absolute",
               top: 0,
               left: 0,
+              mask: "url(#mask)",
             },
           },
           [
-            h("defs", {}, []),
+            h("defs", {}, [
+              h(
+                "mask",
+                {
+                  id: "mask",
+                },
+                areas.map((area) =>
+                  h("rect", {
+                    key: area.id,
+                    x: area.x,
+                    y: area.y,
+                    width: area.width,
+                    height: area.height,
+                    fill: area.type === "canvas" ? "black" : "white",
+                  })
+                )
+              ),
+            ]),
 
             ...areas
               .filter((area) => area.type === "html")
@@ -79,6 +118,7 @@
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
+                        backgroundColor: "lightblue",
                       },
                       dangerouslySetInnerHTML: {
                         __html: area.content,
