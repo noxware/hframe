@@ -1,0 +1,2 @@
+to handle interactivity, ensure that every area (of any kind) (and the whole screen as the fallback)
+has an html representer (even if empty). On hover, make pointer events none for that one. On other hover, all the other ones will be re enabled.
