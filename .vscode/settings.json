@@ -1,6 +1,1 @@
-{
-  "rust-analyzer.linkedProjects": [
-    "examples/demo/Cargo.toml",
-    "hframe-core/Cargo.toml"
-  ]
-}
+{}
