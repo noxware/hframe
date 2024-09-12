@@ -4,6 +4,7 @@ pub(crate) struct Area {
     pub(crate) y: f32,
     pub(crate) width: f32,
     pub(crate) height: f32,
+    pub(crate) layer_id: u64,
     pub(crate) kind: AreaKind,
 }
 
