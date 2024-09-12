@@ -95,5 +95,16 @@ function App() {
   );
 }
 
-render(h(App), document.body);
-window.dispatchEvent(new CustomEvent("hframeJsLoaded"));
+export function run() {
+  render(h(App), document.body);
+  window.dispatchEvent(new CustomEvent("hframeJsLoaded"));
+  console.log("Companion JS running");
+}
+
+export function set_areas(areas) {
+  if (window.setAreas) {
+    window.setAreas(areas);
+  } else {
+    console.error("set_areas function not available");
+  }
+}

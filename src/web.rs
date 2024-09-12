@@ -1,14 +1,54 @@
-use std::sync::LazyLock;
+use serde::Serialize;
 
-static SCRIPT_TAG: LazyLock<String> = LazyLock::new(|| {
-    let html = include_str!("../companion-js-app/index.html");
-    let script_begin = html.find("<script type=\"module\">").unwrap();
-    let script_end = html.find("</script>").unwrap();
-    let script = &html[script_begin..script_end];
-});
+use crate::area::{Area, AreaKind};
 
-pub(crate) fn install() {
-    let html = include_str!("../companion-js-app/index.html");
+mod js {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen(module = "/companion-js-app/companion.js")]
+    extern "C" {
+        pub(crate) fn set_areas(areas: JsValue);
+        pub(crate) fn run();
+    }
 }
 
-pub(crate) fn send_areas(areas: Vec<Area>) {}
+pub(crate) fn install() {
+    js::run();
+}
+
+#[derive(Serialize)]
+struct WebArea {
+    id: String,
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32,
+    content: Option<String>,
+    interactive: Option<bool>,
+    visible: Option<bool>,
+}
+
+impl From<Area> for WebArea {
+    fn from(area: Area) -> Self {
+        let (content, interactive, visible) = match area.kind {
+            AreaKind::Html(html) => (Some(html.content), Some(false), Some(html.visible)),
+            AreaKind::Canvas => (None, None, None),
+        };
+
+        Self {
+            id: area.id,
+            x: area.x,
+            y: area.y,
+            width: area.width,
+            height: area.height,
+            content,
+            interactive,
+            visible,
+        }
+    }
+}
+
+pub(crate) fn send_areas(areas: Vec<Area>) {
+    let web_areas: Vec<WebArea> = areas.into_iter().map(WebArea::from).collect();
+    js::set_areas(serde_wasm_bindgen::to_value(&web_areas).unwrap());
+}
