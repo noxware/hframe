@@ -80,10 +80,17 @@ function App() {
     document
       .getElementById("the_canvas_id")
       .addEventListener("mousemove", handleMouseMove);
-    return () =>
+
+    // When the canvas does not receive mousemove, maybe other elements is capturing it and window should receive it.
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
       document
         .getElementById("the_canvas_id")
         .removeEventListener("mousemove", handleMouseMove);
+
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, []);
 
   const hoveredArea = areas.findLast((area) => {
