@@ -3,7 +3,12 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::{area::Area, web};
+use tap::prelude::*;
+
+use crate::{
+    area::{Area, AreaKind},
+    web,
+};
 
 pub(crate) struct Composition {
     pub(crate) areas: Vec<Area>,
@@ -17,6 +22,30 @@ impl Composition {
     }
 
     pub(crate) fn sync(&mut self, egui_ctx: &egui::Context) {
+        egui_ctx.memory(|mem| {
+            self.areas = mem
+                .layer_ids()
+                .map(|layer_id| {
+                    self.areas
+                        .iter()
+                        .filter(|area| area.layer_id == layer_id.id)
+                        .collect::<Vec<_>>()
+                        .tap_mut(|areas| {
+                            areas.sort_by(|a, _b| {
+                                if let AreaKind::Canvas = a.kind {
+                                    std::cmp::Ordering::Less
+                                } else {
+                                    std::cmp::Ordering::Greater
+                                }
+                            })
+                        })
+                })
+                .flatten()
+                // TODO: Optimize.
+                .cloned()
+                .collect::<Vec<_>>();
+        });
+
         web::send_areas(std::mem::take(&mut self.areas));
     }
 }
