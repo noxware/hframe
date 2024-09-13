@@ -44,6 +44,9 @@ function MaskRect(area) {
     y: area.y,
     width: area.width,
     height: area.height,
+    // TODO: This roundness looks good for egui windows but should not be hardcoded.
+    // In the future, a canvas area may not be a window.
+    rx: area.kind === "canvas" ? 7 : 0,
     fill: area.kind === "canvas" ? "black" : "white",
   });
 }
