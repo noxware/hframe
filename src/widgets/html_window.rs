@@ -97,18 +97,42 @@ impl<'open> HtmlWindow<'open> {
             let cmp = get_composition(ctx);
             let cmp = &mut *cmp.lock().unwrap();
 
-            let visible = inner_response.inner.is_some();
-            let html_rect = inner_response.inner.unwrap_or(egui::Rect::ZERO);
+            // response contains info about the window itself
+            let window_x = inner_response.response.rect.min.x;
+            let window_y = inner_response.response.rect.min.y;
+            let window_width = inner_response.response.rect.width();
+            let window_height = inner_response.response.rect.height();
             let layer_id = inner_response.response.layer_id.id;
 
             cmp.areas.push(Area {
                 id: id.clone(),
-                x: html_rect.min.x,
-                y: html_rect.min.y,
-                width: html_rect.width(),
-                height: html_rect.height(),
+                x: window_x,
+                y: window_y,
+                width: window_width,
+                height: window_height,
                 layer_id,
-                kind: AreaKind::Html(AreaHtml { visible, content }),
+                kind: AreaKind::Canvas,
+            });
+
+            // inner is what got returned from showing the window, which is the rect of the inside area
+            let html_visible = inner_response.inner.is_some();
+            let html_rect = inner_response.inner.unwrap_or(egui::Rect::ZERO);
+            let html_x = html_rect.min.x;
+            let html_y = html_rect.min.y;
+            let html_width = html_rect.width();
+            let html_height = html_rect.height();
+
+            cmp.areas.push(Area {
+                id: id.clone(),
+                x: html_x,
+                y: html_y,
+                width: html_width,
+                height: html_height,
+                layer_id,
+                kind: AreaKind::Html(AreaHtml {
+                    visible: html_visible,
+                    content,
+                }),
             });
         }
     }
