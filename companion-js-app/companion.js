@@ -60,17 +60,23 @@ function App() {
   window.setAreas = setAreas;
 
   useEffect(() => {
-    window.addEventListener("resize", () => {
+    const handleResize = () => {
       setWindowWidth(window.innerWidth);
       setWindowHeight(window.innerHeight);
-    });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
-    window.addEventListener("mousemove", (event) => {
+    const handleMouseMove = (event) => {
       setMouseX(event.clientX);
       setMouseY(event.clientY);
-    });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   const htmlAreas = areas.filter((area) => area.kind === "html");
@@ -83,6 +89,8 @@ function App() {
       mouseY <= area.y + area.height
     );
   });
+  console.log(mouseX, mouseY);
+  console.log(htmlAreas[htmlAreas.length - 1]);
   console.log(hoveredHtmlArea);
 
   return h(
@@ -96,6 +104,7 @@ function App() {
         left: 0,
         mask: "url(#mask)",
         zIndex: 1000,
+        // Issue: This causes window mousemove events to be ignored.
         pointerEvents: "none",
       },
     },
