@@ -78,6 +78,7 @@ function App() {
         left: 0,
         mask: "url(#mask)",
         zIndex: 1000,
+        pointerEvents: "none",
       },
     },
     [
@@ -108,4 +109,8 @@ export function set_areas(areas) {
   } else {
     console.error("set_areas function not available");
   }
+}
+
+export function log(message) {
+  console.log(message);
 }

@@ -15,6 +15,7 @@ eframe = { version = "0.26.2", default-features = false, features = [
 ] }
 log = "0.4"
 wasm-bindgen-futures = "0.4"
+console_error_panic_hook = "0.1.7"
 
 
 [profile.release]

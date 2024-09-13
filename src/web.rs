@@ -1,19 +1,53 @@
+use crate::area::{Area, AreaKind};
 use serde::Serialize;
 
-use crate::area::{Area, AreaKind};
-
 mod js {
+    use serde::{de::DeserializeOwned, Serialize};
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen(module = "/companion-js-app/companion.js")]
     extern "C" {
         pub(crate) fn set_areas(areas: JsValue);
         pub(crate) fn run();
+        pub(crate) fn log(message: JsValue);
+    }
+
+    #[allow(dead_code)]
+    pub(crate) trait FromJsValue {
+        fn from_js_value(value: JsValue) -> Self;
+    }
+
+    pub(crate) trait ToJsValue {
+        fn to_js_value(&self) -> JsValue;
+    }
+
+    impl<T> FromJsValue for T
+    where
+        T: DeserializeOwned,
+    {
+        fn from_js_value(value: JsValue) -> Self {
+            serde_wasm_bindgen::from_value(value).unwrap()
+        }
+    }
+
+    impl<T> ToJsValue for T
+    where
+        T: Serialize,
+    {
+        fn to_js_value(&self) -> JsValue {
+            serde_wasm_bindgen::to_value(self).unwrap()
+        }
     }
 }
 
+use js::ToJsValue;
+
 pub(crate) fn install() {
     js::run();
+}
+
+pub(crate) fn log(message: &str) {
+    js::log(message.to_js_value());
 }
 
 #[derive(Serialize)]
@@ -57,5 +91,5 @@ impl From<Area> for WebArea {
 
 pub(crate) fn send_areas(areas: Vec<Area>) {
     let web_areas: Vec<WebArea> = areas.into_iter().map(WebArea::from).collect();
-    js::set_areas(serde_wasm_bindgen::to_value(&web_areas).unwrap());
+    js::set_areas(web_areas.to_js_value());
 }
