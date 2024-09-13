@@ -75,8 +75,14 @@ function App() {
       setMouseY(event.clientY);
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    // Because of the svg having no pointer events, only the canvas can read mousemove, document, window and body can't, idk why.
+    document
+      .getElementById("the_canvas_id")
+      .addEventListener("mousemove", handleMouseMove);
+    return () =>
+      document
+        .getElementById("the_canvas_id")
+        .removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   const htmlAreas = areas.filter((area) => area.kind === "html");
