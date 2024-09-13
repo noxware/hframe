@@ -105,7 +105,7 @@ impl<'open> HtmlWindow<'open> {
             let layer_id = inner_response.response.layer_id.id;
 
             cmp.areas.push(Area {
-                id: id.clone(),
+                id: format!("{}_canvas", id),
                 x: window_x,
                 y: window_y,
                 width: window_width,
@@ -123,7 +123,7 @@ impl<'open> HtmlWindow<'open> {
             let html_height = html_rect.height();
 
             cmp.areas.push(Area {
-                id: id.clone(),
+                id: format!("{}_html", id),
                 x: html_x,
                 y: html_y,
                 width: html_width,
