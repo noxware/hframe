@@ -1,7 +1,7 @@
 import { h, Component, render } from "https://esm.sh/preact@10.23.2";
 import { useState, useEffect } from "https://esm.sh/preact@10.23.2/hooks";
 
-function Area(area) {
+function Area({ area, interactive }) {
   return h(
     "foreignObject",
     {
@@ -24,7 +24,7 @@ function Area(area) {
           alignItems: "center",
           backgroundColor: "lightblue",
           visibility: area.visible ? "visible" : "hidden",
-          pointerEvents: "auto",
+          pointerEvents: interactive ? "auto" : "none",
         },
         onMouseEnter: () => {
           console.log("Mouse entered");
@@ -52,29 +52,44 @@ function MaskRect(area) {
 }
 
 function App() {
-  const [width, setWidth] = useState(window.innerWidth);
-  const [height, setHeight] = useState(window.innerHeight);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+  const [mouseX, setMouseX] = useState(0);
+  const [mouseY, setMouseY] = useState(0);
   const [areas, setAreas] = useState([]);
   window.setAreas = setAreas;
 
   useEffect(() => {
     window.addEventListener("resize", () => {
-      setWidth(window.innerWidth);
-      setHeight(window.innerHeight);
+      setWindowWidth(window.innerWidth);
+      setWindowHeight(window.innerHeight);
     });
   }, []);
 
-  console.log(`Width: ${width}, Height: ${height}`);
-
   useEffect(() => {
-    console.log("Component mounted");
+    window.addEventListener("mousemove", (event) => {
+      setMouseX(event.clientX);
+      setMouseY(event.clientY);
+    });
   }, []);
+
+  const htmlAreas = areas.filter((area) => area.kind === "html");
+
+  const hoveredHtmlArea = htmlAreas.findLast((area) => {
+    return (
+      area.x <= mouseX &&
+      mouseX <= area.x + area.width &&
+      area.y <= mouseY &&
+      mouseY <= area.y + area.height
+    );
+  });
+  console.log(hoveredHtmlArea);
 
   return h(
     "svg",
     {
-      width,
-      height,
+      width: windowWidth,
+      height: windowHeight,
       style: {
         position: "absolute",
         top: 0,
@@ -95,7 +110,9 @@ function App() {
         ),
       ]),
 
-      ...areas.filter((area) => area.kind === "html").map(Area),
+      htmlAreas.map((area) =>
+        Area({ area, interactive: area === hoveredHtmlArea })
+      ),
     ]
   );
 }
