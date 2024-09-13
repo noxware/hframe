@@ -24,7 +24,7 @@ function Area(area) {
           alignItems: "center",
           backgroundColor: "lightblue",
           visibility: area.visible ? "visible" : "hidden",
-          pointerEvents: area.interactive ? "auto" : "none",
+          pointerEvents: "auto",
         },
         onMouseEnter: () => {
           console.log("Mouse entered");
