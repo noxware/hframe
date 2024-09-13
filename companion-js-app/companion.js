@@ -44,7 +44,7 @@ function MaskRect(area) {
     y: area.y,
     width: area.width,
     height: area.height,
-    fill: area.type === "canvas" ? "black" : "white",
+    fill: area.kind === "canvas" ? "black" : "white",
   });
 }
 
@@ -77,6 +77,7 @@ function App() {
         top: 0,
         left: 0,
         mask: "url(#mask)",
+        zIndex: 1000,
       },
     },
     [
@@ -90,19 +91,19 @@ function App() {
         ),
       ]),
 
-      ...areas.filter((area) => area.type === "html").map(Area),
+      ...areas.filter((area) => area.kind === "html").map(Area),
     ]
   );
 }
 
 export function run() {
+  window.hframeDebug = {};
   render(h(App), document.body);
-  window.dispatchEvent(new CustomEvent("hframeJsLoaded"));
-  console.log("Companion JS running");
 }
 
 export function set_areas(areas) {
   if (window.setAreas) {
+    window.hframeDebug.areas = areas;
     window.setAreas(areas);
   } else {
     console.error("set_areas function not available");
