@@ -96,7 +96,6 @@ function App() {
     );
   });
   console.log(mouseX, mouseY);
-  console.log(htmlAreas[htmlAreas.length - 1]);
   console.log(hoveredHtmlArea);
 
   return h(
