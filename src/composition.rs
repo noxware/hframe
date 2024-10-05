@@ -7,7 +7,7 @@ use tap::prelude::*;
 
 use crate::{
     area::{Area, AreaKind},
-    web,
+    companion, web,
 };
 
 pub(crate) struct Composition {
@@ -18,6 +18,7 @@ impl Composition {
     pub(crate) fn new() -> Self {
         // TODO: Do this in other place.
         web::install();
+        companion::install();
         Self { areas: vec![] }
     }
 

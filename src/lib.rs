@@ -1,5 +1,6 @@
 mod area;
 mod aware;
+mod companion;
 mod composition;
 mod web;
 mod widgets;
