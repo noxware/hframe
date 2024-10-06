@@ -65,6 +65,9 @@ fn EmbeddedArea(props: &AreaProps) -> Html {
         if props.interactive { "auto" } else { "none" }
     );
 
+    // https://github.com/yewstack/yew/issues/3034
+    // https://github.com/yewstack/yew/pull/3629
+
     html! {
         <@{"foreignObject"}
             x={props.area.x.to_string()}
@@ -73,7 +76,7 @@ fn EmbeddedArea(props: &AreaProps) -> Html {
             height={props.area.height.to_string()}
             style="overflow: hidden"
         >
-            <div style={div_style}>
+            <div style={div_style} xmlns="http://www.w3.org/1999/xhtml">
                 {Html::from_html_unchecked(content.to_string().into())}
             </div>
         </@>
