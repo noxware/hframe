@@ -47,7 +47,7 @@ impl Composition {
                 .collect::<Vec<_>>();
         });
 
-        companion::send_areas(self.areas.clone());
+        companion::send_areas(std::mem::take(&mut self.areas));
         //web::send_areas(std::mem::take(&mut self.areas));
     }
 }
