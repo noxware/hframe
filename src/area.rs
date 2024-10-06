@@ -1,5 +1,5 @@
 /// Represents a rectangular entity from the egui canvas or an html element, in unified way.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub(crate) struct Area {
     pub(crate) id: String,
     /// The global x position of the area.
@@ -18,13 +18,13 @@ pub(crate) struct Area {
     pub(crate) kind: AreaKind,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub(crate) enum AreaKind {
     Html(AreaHtml),
     Canvas,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub(crate) struct AreaHtml {
     /// If html element should exist in the dom but be invisible/minimized.
     pub(crate) visible: bool,
