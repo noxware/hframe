@@ -17,7 +17,7 @@ pub(crate) struct Composition {
 impl Composition {
     pub(crate) fn new() -> Self {
         // TODO: Do this in other place.
-        web::install();
+        //web::install();
         companion::install();
         Self { areas: vec![] }
     }
@@ -48,7 +48,7 @@ impl Composition {
         });
 
         companion::send_areas(self.areas.clone());
-        web::send_areas(std::mem::take(&mut self.areas));
+        //web::send_areas(std::mem::take(&mut self.areas));
     }
 }
 
