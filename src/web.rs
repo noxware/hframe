@@ -5,7 +5,7 @@ mod js {
     use serde::{de::DeserializeOwned, Serialize};
     use wasm_bindgen::prelude::*;
 
-    #[wasm_bindgen(module = "/companion-js-app/companion.js")]
+    #[wasm_bindgen(module = "/src/js/companion.js")]
     extern "C" {
         pub(crate) fn set_areas(areas: JsValue);
         pub(crate) fn run();
