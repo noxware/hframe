@@ -6,4 +6,5 @@ mod widgets;
 
 pub use aware::Aware;
 pub use composition::sync;
+pub use widgets::html_frame::HtmlFrame;
 pub use widgets::html_window::HtmlWindow;
