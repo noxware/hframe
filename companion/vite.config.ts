@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     lib: {
-      entry: "src/main.tsx", // Your main entry file
+      entry: "src/main.jsx", // Your main entry file
       // name: "Companion", // Global variable name for UMD/IIFE builds
       formats: ["es"], // Output as ES module
       fileName: "companion", // Output file name
