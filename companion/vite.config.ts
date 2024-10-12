@@ -18,4 +18,7 @@ export default defineConfig({
       // external: ['react', 'react-dom'],
     },
   },
+  define: {
+    "process.env.NODE_ENV": JSON.stringify("production"),
+  },
 });
