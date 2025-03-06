@@ -1,5 +1,7 @@
+//! Contains utilities to deal with the DOM.
+
 use wasm_bindgen::JsCast;
-use web_sys::{Element, HtmlElement};
+use web_sys::HtmlElement;
 
 /// Optimistic getter for the global window object.
 pub(crate) fn window() -> web_sys::Window {
@@ -48,4 +50,12 @@ pub(crate) fn set_styles<'a>(
     for (key, value) in styles {
         set_style(element, key, value);
     }
+}
+
+/// Get viewport size in pixels.
+pub(crate) fn viewport() -> (u32, u32) {
+    let window = window();
+    let width = window.inner_width().unwrap().as_f64().unwrap() as u32;
+    let height = window.inner_height().unwrap().as_f64().unwrap() as u32;
+    (width, height)
 }
